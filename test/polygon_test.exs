@@ -1,6 +1,7 @@
-defmodule PolygonTest do
+defmodule Scurry.PolygonTest do
   use ExUnit.Case, async: true
 
+  alias Scurry.Polygon
   doctest Polygon
 
   # defp box_polygon(), do: [{0, 10}, {10, 10}, {10, 0}, {0, 0}]

@@ -4,7 +4,7 @@ defmodule Scurry.Geo do
 
   """
 
-  import Scurry
+  alias Scurry.Vector
 
   # For explanation of a lot of the math here;
   # * https://khorbushko.github.io/article/2021/07/15/the-area-polygon-or-how-to-detect-line-segments-intersection.html

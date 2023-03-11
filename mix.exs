@@ -37,8 +37,6 @@ defmodule Scurry.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-    [
-      {:poison, "~> 5.0"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:excoveralls, "~> 0.10", only: :test},
     ]

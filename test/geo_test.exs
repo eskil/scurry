@@ -1,6 +1,7 @@
-defmodule GeoTest do
+defmodule Scurry.GeoTest do
   use ExUnit.Case, async: true
 
+  alias Scurry.Geo
   doctest Geo
 
   ##

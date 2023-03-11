@@ -11,6 +11,9 @@ defmodule PolygonMap do
   to find the shortest path between points in the map.
   """
 
+  alias Scurry.Polygon
+  alias Scurry.Vector
+
   @doc """
   Given a polygon map (main, & holes), returns a list of vertices.
 

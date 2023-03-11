@@ -6,8 +6,6 @@ defmodule Scurry.Vector do
   module provides basic trigonometry functions.
   """
 
-  import Scurry
-
   @doc """
   Get the length of a vector, aka magnitude.
 

@@ -27,7 +27,8 @@ defmodule Scurry.Polygon do
   > ![Order of vertices](graph.png)
   """
 
-  import Scurry
+  alias Scurry.Vector
+  alias Scurry.Geo
 
   @doc """
   Checks if a line intersects a polygon.
