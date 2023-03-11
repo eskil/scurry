@@ -1,4 +1,4 @@
-defmodule Astar do
+defmodule Scurry.Astar do
   @moduledoc """
 
   Implementation of [A-star search

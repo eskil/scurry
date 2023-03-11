@@ -1,6 +1,7 @@
-defmodule AstarTest do
+defmodule Scurry.AstarTest do
   use ExUnit.Case, async: true
 
+  alias Scurry.Astar
   doctest Astar
 
   # This test uses the graph and values from

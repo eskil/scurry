@@ -22,7 +22,7 @@ defmodule Scurry.MixProject do
       homepage_url: "https://github.com/eskil/scurry",
       docs: [
         main: "Quickstart",
-        extras: ["doc/Quickstart.md"]
+        extras: ["Quickstart.md"]
       ]
     ]
   end

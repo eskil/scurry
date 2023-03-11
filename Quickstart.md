@@ -5,6 +5,10 @@
 * Use Astar to find a path
 
 ```elixir
+alias Scurry.PolygonMap
+alias Scurry.Vector
+alias Scurry.Astar
+
 # World boundary
 polygon = [{0, 0}, {100, 0}, {100, 100}, {0, 100}]
 
@@ -41,4 +45,4 @@ path = Astar.path(astar)
 [{10, 10}, {40, 30}, {60, 70}, {90, 90}]
 ```
 
-![Sample](quickstart.png)
+![Sample](/doc_images/quickstart.png)

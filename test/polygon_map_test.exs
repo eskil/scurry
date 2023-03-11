@@ -1,6 +1,7 @@
-defmodule PolygonMapTest do
+defmodule Scurr.PolygonMapTest do
   use ExUnit.Case, async: true
 
+  alias Scurry.PolygonMap
   doctest PolygonMap
 
   ##

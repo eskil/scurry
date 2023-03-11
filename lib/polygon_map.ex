@@ -1,4 +1,4 @@
-defmodule PolygonMap do
+defmodule Scurry.PolygonMap do
   @moduledoc """
   Utility functions to work on a polygon map.
 
