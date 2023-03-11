@@ -45,4 +45,4 @@ path = Astar.path(astar)
 [{10, 10}, {40, 30}, {60, 70}, {90, 90}]
 ```
 
-![Sample](/doc_images/quickstart.png)
+![Sample](/imgs/quickstart.png)
