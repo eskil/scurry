@@ -32,7 +32,7 @@ defmodule Scurry.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :wx]
     ]
   end
 
@@ -41,6 +41,7 @@ defmodule Scurry.MixProject do
     [
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:excoveralls, "~> 0.10", only: :test},
+      {:poison, "~> 5.0", only: :dev, runtime: false},
     ]
   end
 end
