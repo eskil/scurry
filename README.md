@@ -1,5 +1,6 @@
 Scurry
 ======
+[![GitHub CI](https://github.com/eskil/scurry/actions/workflows/elixir.yml/badge.svg)](https://github.com/eskil/scurry/actions/workflows/elixir.yml)
 [![Coverage Status](https://coveralls.io/repos/github/eskil/scurry/badge.svg?branch=main)](https://coveralls.io/github/eskil/scurry?branch=main)
 
 
