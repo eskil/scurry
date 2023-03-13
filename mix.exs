@@ -5,8 +5,9 @@ defmodule Scurry.MixProject do
     [
       name: "Scurry",
       description: description(),
+      package: package(),
       app: :scurry,
-      version: "0.1.0",
+      version: "1.0.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -29,14 +30,19 @@ defmodule Scurry.MixProject do
     "An A-star 2D polygon map search implementation and library for Elixir"
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger, :wx]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
+  defp package() do
+    [
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/eskil/scurry"}
+    ]
+  end
+
   defp deps do
     [
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
