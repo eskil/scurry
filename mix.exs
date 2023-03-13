@@ -6,6 +6,7 @@ defmodule Scurry.MixProject do
       name: "Scurry",
       description: description(),
       package: package(),
+      aliases: aliases(),
       app: :scurry,
       version: "1.0.0",
       elixir: "~> 1.14",
@@ -20,7 +21,6 @@ defmodule Scurry.MixProject do
       ],
       source_url: "https://github.com/eskil/scurry",
       docs: [
-        main: "Quickstart",
         extras: ["Quickstart.md"]
       ]
     ]
@@ -28,6 +28,19 @@ defmodule Scurry.MixProject do
 
   defp description() do
     "An A-star 2D polygon map search implementation and library for Elixir"
+  end
+
+  defp aliases do
+    [docs: [&copy_md_files/1, "docs", &copy_imgs/1]]
+  end
+
+  defp copy_md_files(_) do
+    File.cp!("Quickstart.md", "doc/Quickstart.md")
+  end
+
+  defp copy_imgs(_) do
+    File.cp!("imgs/polygon.png", "doc/polygon.png")
+    File.cp!("imgs/quickstart.png", "doc/quickstart.png")
   end
 
   def application do
