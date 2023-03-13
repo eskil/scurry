@@ -1,7 +1,6 @@
 Scurry
 ======
-[![Build Status](https://github.com/eskil/scurry/workflows/tests/badge.svg)](https://github.com/eskil/scurry/actions)
-[![Coverage Status](https://coveralls.io/repos/eskil/scurry/badge.svg?branch=master)](https://coveralls.io/r/eskil/scurry?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/eskil/scurry/badge.svg?branch=main)](https://coveralls.io/github/eskil/scurry?branch=main)
 
 
 An
