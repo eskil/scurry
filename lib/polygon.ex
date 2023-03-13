@@ -364,7 +364,7 @@ defmodule Scurry.Polygon do
   end
 
   @doc """
-  The opposite of is_inside?, provided for code readability.
+  The opposite of `is_inside?/3`, provided for code readability.
   """
   def is_outside?(polygon, point, opts \\ [])
 

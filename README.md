@@ -1,4 +1,8 @@
-# Scurry
+Scurry
+======
+[![Build Status](https://github.com/eskil/scurry/workflows/tests/badge.svg)](https://github.com/eskil/scurry/actions)
+[![Coverage Status](https://coveralls.io/repos/eskil/scurry/badge.svg?branch=master)](https://coveralls.io/r/eskil/scurry?branch=master)
+
 
 An
 [A-star 2D polygon map search](https://en.wikipedia.org/wiki/A*_search_algorithm)
@@ -13,7 +17,7 @@ by adding `scurry` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:scurry, "~> 1.0.0"}
+    {:scurry, git: "https://github.com/eskil/scurry.git"},
   ]
 end
 ```

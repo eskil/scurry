@@ -3,6 +3,8 @@ defmodule Scurry.MixProject do
 
   def project do
     [
+      name: "Scurry",
+      description: description(),
       app: :scurry,
       version: "0.1.0",
       elixir: "~> 1.14",
@@ -15,16 +17,16 @@ defmodule Scurry.MixProject do
         "coveralls.post": :test,
         "coveralls.html": :test
       ],
-
-      # Docs
-      name: "Scurry",
       source_url: "https://github.com/eskil/scurry",
-      homepage_url: "https://github.com/eskil/scurry",
       docs: [
         main: "Quickstart",
         extras: ["Quickstart.md"]
       ]
     ]
+  end
+
+  defp description() do
+    "An A-star 2D polygon map search implementation and library for Elixir"
   end
 
   # Run "mix help compile.app" to learn about applications.
