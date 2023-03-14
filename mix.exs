@@ -8,7 +8,7 @@ defmodule Scurry.MixProject do
       package: package(),
       aliases: aliases(),
       app: :scurry,
-      version: "1.0.0",
+      version: "1.0.1",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -35,12 +35,14 @@ defmodule Scurry.MixProject do
   end
 
   defp copy_md_files(_) do
+    File.mkdir("doc")
     File.cp!("Quickstart.md", "doc/Quickstart.md")
   end
 
   defp copy_imgs(_) do
-    File.cp!("imgs/polygon.png", "doc/polygon.png")
-    File.cp!("imgs/quickstart.png", "doc/quickstart.png")
+    File.mkdir("doc/imgs")
+    File.cp!("imgs/polygon.png", "doc/imgs/polygon.png")
+    File.cp!("imgs/quickstart.png", "doc/imgs/quickstart.png")
   end
 
   def application do
