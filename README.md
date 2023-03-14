@@ -3,7 +3,7 @@ Scurry
 [![GitHub CI](https://github.com/eskil/scurry/actions/workflows/elixir.yml/badge.svg)](https://github.com/eskil/scurry/actions/workflows/elixir.yml)
 [![Coverage Status](https://coveralls.io/repos/github/eskil/scurry/badge.svg?branch=main)](https://coveralls.io/github/eskil/scurry?branch=main)
 [![Last Updated](https://img.shields.io/github/last-commit/eskil/scurry.svg)](https://github.com/eskil/scurry/commits/master)
-
+[![Hex.pm Version](https://img.shields.io/hexpm/v/scurry.svg?style=flat-square)](https://hex.pm/packages/scurry)
 
 An
 [A-star 2D polygon map search](https://en.wikipedia.org/wiki/A*_search_algorithm)
@@ -41,26 +41,28 @@ iex(1)> Scurry.Wx.start()
 
 ## How to use
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `scurry` to your list of dependencies in `mix.exs`:
+Adding `scurry` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:scurry, git: "https://github.com/eskil/scurry.git"},
+    {:scurry, "~> 1.0"},
   ]
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/scurry>.
+Then, update your dependencies:
 
-See the [quickstart](Quickstart.md).
+```sh-session
+$ mix deps.get
+```
 
 ## Internals
 
-There's better API documentation in the code (not yet published on hexdocs)
+There's better API documentation than this see [the hexdocs](https://hexdocs.pm/scurry).
+
+See also the [quickstart](Quickstart.md).
+
 
 ```
 mix docs

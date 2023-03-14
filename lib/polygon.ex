@@ -24,7 +24,7 @@ defmodule Scurry.Polygon do
   > Here's a crude drawing of an example of the M shaped polygon used for many tests/docs.
   >
   > `polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]`
-  > ![Order of vertices](graph.png)
+  > ![Order of vertices](imgs/polygon.png)
   """
 
   alias Scurry.Vector
