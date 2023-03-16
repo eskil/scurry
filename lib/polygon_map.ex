@@ -105,7 +105,7 @@ defmodule Scurry.PolygonMap do
   * `polygon`, a list of `{x, y}` vertices. This is the main boundary map.
   * `holes`, a list of lists of `{x, y}` vertices. These are holes within
     `polygon`.
-  * `line` a tuple of points (`{{ax, ay}, {bx, by}}`) describing a line.
+  * `point` a tuple of coordinates (`{x, y}`) describing a point
 
   The function will return a new point `{bx, by}` for b such that;
 
@@ -115,43 +115,40 @@ defmodule Scurry.PolygonMap do
   * if b is inside the main map, but also inside a hole, the new bis the
     closest point on the holes edges.
   """
-  def nearest_point([], _, {_start, stop}=_line) do
-    stop
+  def nearest_point([], _, point) do
+    point
   end
 
-  def nearest_point(polygon, holes, line) do
-    {_start, stop} = line
-    nearest_point_helper(polygon, holes, line, Polygon.is_inside?(polygon, stop))
+  def nearest_point(polygon, holes, point) do
+    nearest_point_helper(polygon, holes, point, Polygon.is_inside?(polygon, point))
   end
 
-  defp nearest_point_helper(_, holes, line, true) do
-    nearest_point_in_holes(holes, line)
+  defp nearest_point_helper(_, holes, point, true) do
+    nearest_point_in_holes(holes, point)
   end
 
-  defp nearest_point_helper(points, _holes, line, false) do
-    nearest_boundary_point_helper(points, line)
+  defp nearest_point_helper(points, _holes, point, false) do
+    nearest_boundary_point_helper(points, point)
   end
 
-  defp nearest_point_in_holes([], {_start, stop}=_line) do
-    stop
+  defp nearest_point_in_holes([], point) do
+    point
   end
 
-  defp nearest_point_in_holes([hole|holes], line) do
-    {_start, stop} = line
-    nearest_point_in_holes_helper([hole|holes], line, Polygon.is_inside?(hole, stop, allow_border: false))
+  defp nearest_point_in_holes([hole|holes], point) do
+    nearest_point_in_holes_helper([hole|holes], point, Polygon.is_inside?(hole, point, allow_border: false))
   end
 
-  defp nearest_point_in_holes_helper([_hole|holes], line, false) do
-    nearest_point_in_holes(holes, line)
+  defp nearest_point_in_holes_helper([_hole|holes], point, false) do
+    nearest_point_in_holes(holes, point)
   end
 
-  defp nearest_point_in_holes_helper([hole|_holes], line, true) do
-    nearest_boundary_point_helper(hole, line)
+  defp nearest_point_in_holes_helper([hole|_holes], point, true) do
+    nearest_boundary_point_helper(hole, point)
   end
 
-  defp nearest_boundary_point_helper(polygon, line) do
-    {_start, stop} = line
-    {x, y} = Polygon.nearest_point_on_edge(polygon, stop)
+  defp nearest_boundary_point_helper(polygon, point) do
+    {x, y} = Polygon.nearest_point_on_edge(polygon, point)
 
     # This is a problematic area - we want to round towards the start of the
     # line Eg. in complex.json scene, clicking {62, 310} yields {64.4, 308.8},
