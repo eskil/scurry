@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   build:
-    name: Build and test with unlocked deps
+    name: Unlocked deps
     runs-on: ubuntu-latest
     strategy:
       matrix:
