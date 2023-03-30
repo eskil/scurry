@@ -4,6 +4,8 @@ Scurry
 [![Coverage Status](https://coveralls.io/repos/github/eskil/scurry/badge.svg?branch=main)](https://coveralls.io/github/eskil/scurry?branch=main)
 [![Last Updated](https://img.shields.io/github/last-commit/eskil/scurry.svg)](https://github.com/eskil/scurry/commits/master)
 [![Hex.pm Version](https://img.shields.io/hexpm/v/scurry.svg?style=flat-square)](https://hex.pm/packages/scurry)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Hex.pm Download Total](https://img.shields.io/hexpm/dt/scurry.svg?style=flat-square)](https://hex.pm/packages/scurry)
 
 An
 [A-star 2D polygon map search](https://en.wikipedia.org/wiki/A*_search_algorithm)
