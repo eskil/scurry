@@ -330,7 +330,7 @@ defmodule Scurry.Polygon do
   end
 
   # See https://www.david-gouveia.com/pathfinding-on-a-2d-polygonal-map
-  def is_inside?(polygon, point, opts) do
+  def is_inside?(polygon, {_, _}=point, opts) when is_list(polygon) do
     epsilon = 0.5
 
     prev = Enum.at(polygon, -1)

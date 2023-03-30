@@ -501,8 +501,7 @@ defmodule Scurry.Wx do
   end
 
   def get_updated_graph_vertices_path(polygon, holes, vertices, graph, start, stop) do
-    line = {start, stop}
-    np = PolygonMap.nearest_point(polygon, holes, line)
+    np = PolygonMap.nearest_point(polygon, holes, stop)
 
     {graph_usec, {new_graph, new_vertices}} = :timer.tc(fn ->
       PolygonMap.extend_graph(graph, polygon, holes, vertices, [start, np])
