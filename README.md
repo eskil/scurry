@@ -12,6 +12,11 @@ An
 implementation and set of polygon, geometry and vector utility
 functions for Elixir.
 
+## Quickstart
+
+See the [quickstart](Quickstart.md) or [hex.pm docs](https://hexdocs.pm/scurry).
+
+
 ## Wx Demo
 
 Start a wxwidgets demo of a-star by running `Scurry.Wx.start()`;
@@ -62,9 +67,6 @@ $ mix deps.get
 ## Internals
 
 There's better API documentation than this see [the hexdocs](https://hexdocs.pm/scurry).
-
-See also the [quickstart](Quickstart.md).
-
 
 ```
 mix docs
