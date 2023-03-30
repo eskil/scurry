@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Elixir CI unlocked
+name: CI unlocked
 
 on:
   push:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   build:
-    name: Build and test Elixir 1.14
+    name: Build and test with unlocked deps
     runs-on: ubuntu-latest
     strategy:
       matrix:
