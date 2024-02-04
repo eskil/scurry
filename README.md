@@ -191,9 +191,9 @@ cost_fun = fn a, b -> Vector.distance(a, b) end
 
 ### A-star
 
-In the context of A-star, we use `node` instead of `vertice` since we're
-describing graphs - not strictly polygons. In the example, each node
-is a polygon vertice (ie. `{x, y}`).
+In the context of A-star, we use the terminology `node` instead of
+`vertice` since we're describing graphs - not strictly polygons. In
+the example, each node is a polygon vertice (ie. `{x, y}`).
 
 A `node` is opaque to the algorithm, it just uses them as
 keys for it's internal state maps and arguments to `heur_fun`.

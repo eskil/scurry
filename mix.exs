@@ -8,8 +8,8 @@ defmodule Scurry.MixProject do
       package: package(),
       aliases: aliases(),
       app: :scurry,
-      version: "2.0.0",
-      elixir: "~> 1.13",
+      version: "2.0.1",
+      elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
@@ -60,8 +60,8 @@ defmodule Scurry.MixProject do
 
   defp deps do
     [
-      {:ex_doc, "~> 0.21", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.10", only: :test},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.18", only: :test},
       {:poison, "~> 5.0", only: :dev, runtime: false},
     ]
   end
