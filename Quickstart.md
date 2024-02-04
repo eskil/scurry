@@ -9,12 +9,20 @@ There's four steps to do a 2D polygon map path search
 1. Extend the graph with your start and stop
 1. Use Astar to find a path
 
+You can try out the code below in iex.
+
+```shell
+iex -S mix
+```
+
 ```elixir
 alias Scurry.PolygonMap
 alias Scurry.Vector
 alias Scurry.Astar
 
-## Step 1
+## Step 1 - define the world
+
+# The world is defined by a boundary box plus holes inside the box.
 
 # World boundary
 polygon = [{0, 0}, {100, 0}, {100, 100}, {0, 100}]
@@ -25,13 +33,14 @@ holes = [
  [{60, 30}, {70, 30}, {70, 70}, {60, 70}],
 ]
 
-## Step 2
+## Step 2 - convert world to graph
 
-# The cost function for the graph, euclidian distance
+# To compute a path, we need to convert the boundary & holes into
+# a graph of all corners.
+
+# The cost function for the graph, this uses basic euclidian distance
+# as a basic example. This is used to compute the graph of the world.
 cost_fun = fn a, b -> Vector.distance(a, b) end
-
-# The heuristic function for A-star, euclidian distance as well
-heur_fun = fn a, b -> Vector.distance(a, b) end
 
 # Find the reachable vertices
 vertices = PolygonMap.get_vertices(polygon, holes)
@@ -39,7 +48,10 @@ vertices = PolygonMap.get_vertices(polygon, holes)
 # Make a graph of them using an optional cost_fun
 graph = PolygonMap.create_graph(polygon, holes, vertices, cost_fun)
 
-## Step 3
+## Step 3 - extend graph with actor start/stop
+
+# For an actor to move from a to b in the world, we first extend the
+# graph with start and stop
 
 # Define our start & stop
 {start, stop} = {{10, 10}, {90, 90}}
@@ -50,6 +62,13 @@ graph = PolygonMap.create_graph(polygon, holes, vertices, cost_fun)
   vertices, [start, stop], cost_fun)
 
 ## Step 4
+
+# Given the new graph, finally compute the path in the world.
+
+# The heuristic function for A-star, this uses euclidian distance as well.
+# This is used as the cost of each edge traversal in the graph during a-star
+# path finding. It can be the same as cost_fun but it does not have to be.
+heur_fun = fn a, b -> Vector.distance(a, b) end
 
 # Astar search
 astar = Astar.search(search_graph, start, stop, heur_fun)

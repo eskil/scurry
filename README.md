@@ -66,7 +66,7 @@ $ mix deps.get
 
 ## Internals
 
-There's better API documentation than this see [the hexdocs](https://hexdocs.pm/scurry).
+*There's better API documentation than this see [the hexdocs](https://hexdocs.pm/scurry), especially see the [quickstart](Quickstart.md).*
 
 ```
 mix docs
@@ -183,7 +183,10 @@ determine if two vertices should have an edge. This is currently not
 configurable or passed as a function.
 
 The default `cost_fun` and `heur_fun` is the euclidean distance been
-the two points.
+the two points. The difference between the two is, `cost_fun` is used
+while computing the graph and `heur_fun` while computing the
+path. Typically they will be the same but that is dependent on use
+case.
 
 ```elixir
 cost_fun = fn a, b -> Vector.distance(a, b) end
