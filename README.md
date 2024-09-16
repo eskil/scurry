@@ -34,7 +34,7 @@ iex(1)> Scurry.Wx.start()
 ![animated gif showing demo](imgs/a-star-sample.gif?raw=true "A-star demo")
 
 * The start point is a *green crosshair*.
-* The cursor position is a *red crosshair* if inside the main polution, *gray* if outside.
+* The cursor position is a *red crosshair* if inside the main polygon, *gray* if outside.
 * Moving the mouse will show a line from start to the cursor.
   * It'll be *green* if the there's a line of sight.
   * It'll be *gray* if not, and there'll be a *small red crosshair* at
