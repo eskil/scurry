@@ -13,14 +13,18 @@ An
 implementation and set of polygon, geometry and vector utility
 functions for Elixir.
 
-## Quickstart
+Possible use cases cover game path finding or general graph searches.
 
-See the [quickstart](Quickstart.md) or [hex.pm docs](https://hexdocs.pm/scurry).
+# Quickstart
+
+* See the [quickstart](Quickstart.md).
+* Or on [hex.pm docs](https://hexdocs.pm/scurry/quickstart.html).
+* And [full API] reference](https://hexdocs.pm/scurry/api-reference.html).
 
 
-## Wx Demo
+# WxWidgets Demo
 
-Start a wxwidgets demo of a-star by running `Scurry.Wx.start()`;
+Start the [WxWidgets](https://www.erlang.org/doc/apps/wx/chapter.html) demo of A-star by running `Scurry.Wx.start()`;
 
 ```
 $ mix deps.get
@@ -28,26 +32,39 @@ $ mix compile
 $ iex -S mix
 Erlang/OTP 25 [erts-13.1.3] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [jit:ns] [dtrace]
 
-Interactive Elixir (1.14.2) - press Ctrl+C to exit (type h() ENTER for help)
+Interactive Elixir (1.18.1) - press Ctrl+C to exit (type h() ENTER for help)
+
+Scurry (vx.y.z)
+---------------
+
+An a-star 2d polygon map search implementation and library for elixir
+
+Using config from config/config.exs
+
+For WxWidget demo run Scurry.Wx.start()
+
+🚀
+
+
 iex(1)> Scurry.Wx.start()
 ```
 
 ![animated gif showing demo](imgs/a-star-sample.gif?raw=true "A-star demo")
 
-* The start point is a *green crosshair*.
-* The cursor position is a *red crosshair* if inside the main polygon, *gray* if outside.
+* The *start point* is the **green crosshair**.
+* The *cursor position* is the **red crosshair** if inside the main polygon, **gray** if outside.
 * Moving the mouse will show a line from start to the cursor.
-  * It'll be *green* if the there's a line of sight.
-  * It'll be *gray* if not, and there'll be a *small red crosshair* at
-    the first blockage, and *small gray crosshair* all subsequent
-    blocks.
+  * It'll be **green** if the there's a *line of sight*, meaning no obstacles.
+  * It'll be **gray** if not, and there'll be a **small red crosshair** at
+    the first obstacle intersection, and **small gray crosshair** all subsequent
+    intersections in the line of sight.
 * Holding down left mouse button will show full search graph in
-  *bright orange* and a *thick green path* for the found path.
+  **bright orange** and a **thick green path** for the found path.
 * Releasing the left mouse button resets the start to there.
   * You can place the start outside the main polygon.
 
 
-## How to use
+# How to use
 
 Adding `scurry` to your list of dependencies in `mix.exs`:
 
@@ -59,15 +76,17 @@ def deps do
 end
 ```
 
-Then, update your dependencies:
+Update your dependencies:
 
 ```sh-session
 $ mix deps.get
 ```
 
-## Internals
+Commit `mix.lock` file as desired.
 
-*There's better API documentation than this see [the hexdocs](https://hexdocs.pm/scurry), especially see the [quickstart](Quickstart.md).*
+# Internals
+
+**Full API documentation than this see [the hexdocs](https://hexdocs.pm/scurry), especially see the [quickstart](Quickstart.md).**
 
 ```
 mix docs
@@ -97,10 +116,10 @@ In elixir, it looks like
 polygon = [{x, y}, {x, y}, ...]
 ```
 
-The screen coordinate `0, 0` is upper left the x-axis goes
-left-to-right and y-axis top-to-bottom. Polygons must be defined
-clockwise and not-closed. This is important for convex/concave vertex
-checks.
+* The screen coordinate `0, 0` is **upper left**
+* The x-axis goes **left-to-right** and y-axis **top-to-bottom**.
+* Polygons **must be** defined **clockwise and not-closed**. *This is important for convex/concave vertex checks.*
+* The polygon will be treated as closed with the last coordinate connected to the first.
 
 ### Polygon map
 
@@ -122,37 +141,39 @@ The wxwidgets demo map is loaded from a [json file](priv/complex.json), and look
 }
 ```
 
-The `main` polygon is the primary walking area - as complex as it
-needs to be.
+The demo loads the polygon data, and the polygon named `main` is the
+primary walking area - as complex as it needs to be.
 
-Subsequent polygons (not named `main`) are holes within it.
+Subsequent polygons (not named `main`) are added as holes/obstacles
+within it - non-walkable areas.
 
-Polygons don't need to be closed (last `[x, y]` equals the first),
-this will be handled internally.
+Polygons *must not* be be closed (meaning last `[x, y]` json point being
+equal to the first), this will be handled internally.
 
-The polygon name isn't used internally, only to decide which polygon
-is the primary boundary and which are holes.
+The polygon name isn't used internally, only by the wxwidgets demo to
+pick the primary boundary and which are holes.
 
 ### Graph
 
 The A-star graph doesn't need to be a polygon map. It just needs to be
-map from `node` to a list of `{node, cost}` edges. Node just has to be
-a term that elixir can use as a map key.
+map from `node` to a list of `{node, cost}` edges.
 
-For the 2D map search, it is a map from `vertice` to a list of
-`{vertice, cost}`. This is computed from the polygon map using a set
+A `node` just has to be a term that elixir can use as a map key.
+
+For the 2D map search, it is a map from a `vertex` (aka vectors) to a list of
+`{vertex, cost}`. This is computed from the polygon map using a set
 of vertices. This set is composed of;
 
-* the main polygon's *concave*  (pointing into the world)
-* the holes' *convex* (point out of the hole, into the world)
+* the main polygon's **concave** shape  (pointing *into* the world)
+* the holes' **convex** shapes (point *out of( the hole, *into* the world)
 
 and `PolygonMap.get_vertices/2` creates this.
 
 ```elixir
 vertices = [
-  {x1, y1}=vertice1,
-  {x2, y2}=vertice2,
-  {x3, y3}=vertice3,
+  {x1, y1} = vertex1,
+  {x2, y2} = vertex2,
+  {x3, y3} = vertex3,
   ...
 ]
 ```
@@ -160,16 +181,16 @@ vertices = [
 This is transformed to a graph (`PolygonMap.create_graph/4`) given the
 polygon, holes, vertices (from above) and cost function.
 
-Assuming a `cost_fun` that has type `vertice, vertice :: cost`, the graph looks like;
+Assuming a `cost_fun/2` that has type `vertex, vertex :: cost`, the graph looks like;
 
 ```elixir
 graph = %{
-  vertice1 => [
-    vertice2, cost_fun(vertice1, vertice2),
-    vertice3, cost_fun(vertice1, vertice3),
-    vertice4, cost_fun(vertice1, vertice4),
+  vertex1 => [
+    vertex2, cost_fun(vertex1, vertex2),
+    vertex3, cost_fun(vertex1, vertex3),
+    vertex4, cost_fun(vertex1, vertex4),
   ],
-  # When expressed as "vertice = {x, y}"
+  # When expressed as "vertex = {x, y}" (ie. vectors)
   {x1, x2} => [
     {{x2, y2}, cost_fun({x1, y2}, {x2, y2})},
     {{x3, y3}, cost_fun({x1, y2}, {x3, y3})},
@@ -181,23 +202,26 @@ graph = %{
 
 Note: `create_graph` uses `PolygonMap.is_line_of_sight?/3` to
 determine if two vertices should have an edge. This is currently not
-configurable or passed as a function.
+configurable or passed as a function. Having that functionality would
+allow for configurably behaviour, such as passing through/flying over
+obstacles.
 
-The default `cost_fun` and `heur_fun` is the euclidean distance been
-the two points. The difference between the two is, `cost_fun` is used
-while computing the graph and `heur_fun` while computing the
-path. Typically they will be the same but that is dependent on use
-case.
+The default `cost_fun` and `heur_fun` (see later) is the euclidean
+distance been the two points. The difference between the two is,
+`cost_fun` is used while computing the graph and `heur_fun` while
+computing the path. Typically they will be the same but that is
+dependent on use case.
 
 ```elixir
+# Euclidean distance cost function
 cost_fun = fn a, b -> Vector.distance(a, b) end
 ```
 
 ### A-star
 
 In the context of A-star, we use the terminology `node` instead of
-`vertice` since we're describing graphs - not strictly polygons. In
-the example, each node is a polygon vertice (ie. `{x, y}`).
+`vertex` since we're describing graphs. In the example, each node is
+a polygon vertex/vector (ie. `{x, y}`).
 
 A `node` is opaque to the algorithm, it just uses them as
 keys for it's internal state maps and arguments to `heur_fun`.
@@ -214,7 +238,7 @@ graph = %{
     node3, cost_fun(node1, node3),
     node4, cost_fun(node1, node4),
   ],
-  # When expressed as "node = {x, y}"
+  # When doing 2d-map, nodes are vectors, {x, y}
   {x1, x2} => [
     {{x2, y2}, cost_fun({x1, y2}, {x2, y2})},
     {{x3, y3}, cost_fun({x1, y2}, {x3, y3})},
@@ -224,12 +248,13 @@ graph = %{
 }
 ```
 
-* `start` and `stop`, the nodes to find a path between.
+* `start` and `stop`, the nodes to find a path between. When doing 2d-map pathfinding, these are typically added to create a temporay graph to search, using `PolygonMap.extend/5`
 
 * `heur_fun` function `node, node :: cost` computes the heuristic
   cost. The default is the euclidian distance.
 
 ```elixir
+# Euclidean distance heuristic function
 fn a, b -> Vector.distance(a, b) end
 ```
 
@@ -265,3 +290,17 @@ Within `astar.ex`, there's two steps; search & getting the
 path. `search` returns the full state, and `path` could be
 extended to return the cost along the path if needed. It can fetch
 this from `g_cost.`
+
+# Maintainers
+
+## New release
+
+To make a new release.
+
+Preconditions
+* build test etc
+* Logged into hex via `mix hex...`, check using `mix hex.user whoami`
+
+Steps
+1. Increase version in `mix.exs`
+1. `mix hex.publish`

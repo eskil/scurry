@@ -501,18 +501,22 @@ defmodule Scurry.Wx do
   end
 
   def get_updated_graph_vertices_path(polygon, holes, vertices, graph, start, stop) do
+    # Determine the nearest point inside the polygon, in case the user clicked
+    # outside the polygon.
     np = PolygonMap.nearest_point(polygon, holes, stop)
 
+    # Extend the map to include start/stop (nearest)
     {graph_usec, {new_graph, new_vertices}} = :timer.tc(fn ->
       PolygonMap.extend_graph(graph, polygon, holes, vertices, [start, np])
     end)
 
+    # Search the graph from start to np using euclidean distance heur_fun
     {astar_usec, path} = :timer.tc(fn ->
       astar = Astar.search(new_graph, start, np, fn a, b -> Vector.distance(a, b) end)
       Astar.path(astar)
     end)
 
-    # Curtesy compute distance
+    # Curtesy compute distance for the user
     distance =
       path
       |> Enum.chunk_every(2, 1)
@@ -521,10 +525,14 @@ defmodule Scurry.Wx do
         _, acc -> acc
       end)
 
-    Logger.info("graph extend = #{usec_to_str(graph_usec)} a-star = #{usec_to_str(astar_usec)} distance = #{distance}")
+    Logger.info("graph extend = #{usec_to_str(graph_usec)} a-star = #{usec_to_str(astar_usec)} distance = #{:erlang.float_to_binary(distance, [decimals: 2])}")
 
     {new_graph, new_vertices, path}
   end
+
+  ##
+  ## WxWidgets helper methods to draw things
+  ##
 
   @doc"""
   Draw a crosshair at the given `{x, y}` and with the given `color`
@@ -575,6 +583,10 @@ defmodule Scurry.Wx do
     end
   end
 
+  ##
+  ## Helper methods to load json map
+  ##
+
   # Transform a json `[x, y]` list to a `{x, y}` tuple and ensure it's a integer (trunc)
   defp transform_point([x, y]) do
     {round(x), round(y)}
@@ -619,7 +631,7 @@ defmodule Scurry.Wx do
     {mains[:main], holes}
   end
 
-  # Quick and dirty tap function that'll crash if any polygon isn't clockwise.
+  # Quick and dirty "tap" function that'll crash earlyif any polygon isn't clockwise.
   defp check_clockwise(polygons) do
     true = Enum.all?(polygons, fn {_name, polygon} -> Polygon.is_clockwise?(polygon) end)
   end
