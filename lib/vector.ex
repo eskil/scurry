@@ -260,7 +260,7 @@ defmodule Scurry.Vector do
   end
 
   @doc """
-  Calls trunc on a vector `v` to make the vector work with wx (requires integers).
+  Calls trunc on a vector `v` to make the vector work with WxWidgets (requires integers).
 
   ## Params
 

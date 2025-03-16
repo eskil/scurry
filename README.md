@@ -43,13 +43,12 @@ Using config from config/config.exs
 
 For WxWidget demo run Scurry.Wx.start()
 
-🚀
-
+Go forth and find... 🐿️
 
 iex(1)> Scurry.Wx.start()
 ```
 
-![animated gif showing demo](imgs/a-star-sample.gif?raw=true "A-star demo")
+![animated gif showing wxwidgets demo](imgs/a-star-sample.gif?raw=true "A-star demo")
 
 * The *start point* is the **green crosshair**.
 * The *cursor position* is the **red crosshair** if inside the main polygon, **gray** if outside.
@@ -291,7 +290,7 @@ path. `search` returns the full state, and `path` could be
 extended to return the cost along the path if needed. It can fetch
 this from `g_cost.`
 
-# Maintainers
+# Maintainers corner
 
 ## New release
 
@@ -304,3 +303,10 @@ Preconditions
 Steps
 1. Increase version in `mix.exs`
 1. `mix hex.publish`
+
+## Todo
+
+Speed up graph extension by caching cachable `cost_fun` results in a state.
+
+That might mean making a genserver version that has the state supports
+extend/search using calls/casts.

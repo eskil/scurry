@@ -336,8 +336,11 @@ defmodule Scurry.Wx do
     bright_red = {255, 0, 0}
     bright_green = {0, 255, 0}
 
+    # Draw start point bright green
     wx_crosshair(dc, state.start, bright_green, size: 6)
 
+    # Draw stop (cursor) gray if inside hole (and inside main polygon), red
+    # otherwise.
     if Polygon.is_inside?(state.polygon, state.cursor) do
       if Enum.any?(state.holes, &(Polygon.is_inside?(&1, state.cursor))) do
         wx_crosshair(dc, state.cursor, light_gray, size: 6)
@@ -428,7 +431,8 @@ defmodule Scurry.Wx do
     |> Enum.sort(fn ia, ib ->
       v1 = Vector.sub(start, ia)
       v2 = Vector.sub(start, ib)
-      Vector.distance(start, v1) < Vector.distance(start, v2)
+      # Sort closest to furthest
+      Vector.distance(start, v1) > Vector.distance(start, v2)
     end)
     |> Enum.map(&(Vector.trunc_pos(&1)))
 
