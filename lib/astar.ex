@@ -3,23 +3,23 @@ defmodule Scurry.Astar do
 
   Implementation of [A-star search
   algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm) to find the
-  shortest path in 2D polygon maps.
+  shortest path in graphs or 2D polygon maps.
 
-  The basic usage is;
+  Basic usage is;
 
   ```
-  # computes the heuristic cost between two nodes
+  # Define function for the heuristic cost between two nodes
   def heur_fun(node_a, node_b) do
-    ...
+    ... returns the cost of node a to node b
   end
 
   # Define a graph
   graph = %{
     node_1 => [
-    {node_2, cost_1_2}, {node_3, cost_1_3},
+      {node_2, cost_1_to_2}, {node_3, cost_1_to_3},
     ],
     node_2 => [
-      {node_3, cost_2_3}, {node_4, cost_2_4},
+      {node_3, cost_2_to_3}, {node_4, cost_2_to_4},
     ],
     ...
   }
@@ -27,11 +27,13 @@ defmodule Scurry.Astar do
   # Do A-star search
   state = Astar.search(graph, node_1, node_z, &heur_fun/2)
 
-  # Extract path
+  # Extract path from the state
   path = Astart.path(state)
   [node1, ..., node_z]
   ```
   """
+
+  require Logger
 
   @doc """
   Find shortest path in `graph` from `start` to `stop`.
@@ -48,9 +50,6 @@ defmodule Scurry.Astar do
   Returns the algorithms internal state which can be passed to `path/1` to
   obtain the actual path.
   """
-
-  require Logger
-
   def search(graph, start, stop, heur_fun) do
     # Logger.info("----------------------------------------- A-star")
     # Logger.info("graph = #{inspect graph, pretty: true}")
@@ -162,7 +161,8 @@ defmodule Scurry.Astar do
 
   * `state` the a-star state returned by `search/4`
 
-  Returns the path.
+  Returns the path as a list of node terms. The type of the node term is dictated
+  by the key's type in the graph.
   """
   def path(state) do
     next = state.shortest_path_tree[state.stop]

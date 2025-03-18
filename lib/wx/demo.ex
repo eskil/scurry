@@ -33,11 +33,13 @@ defmodule Scurry.Wx do
     # Setup window
     wx = :wx.new([{:debug, :verbose}, {:silent_start, false}])
 
+    # Setup frame and allow resizing/handle close.
     frame_id = System.unique_integer([:positive, :monotonic])
     frame = :wxFrame.new(wx, frame_id, @title, size: @size)
     :wxFrame.connect(frame, :size, [:callback])
     :wxFrame.connect(frame, :close_window)
 
+    # Create panel we click/draw on.
     panel = :wxPanel.new(frame, size: @size)
     :wxPanel.connect(panel, :paint, [:callback])
     :wxPanel.connect(panel, :left_up)
@@ -450,29 +452,33 @@ defmodule Scurry.Wx do
     :wxBrush.destroy(brush)
   end
 
-  def draw_walk_graph(dc, state) do
+  # Draw the entire walk graph when we don't have a "click"
+  def draw_walk_graph(dc, %{click_walk_graph: nil} = state) do
     light_red = {255, 0, 0, 64}
-    bright_red = {255, 87, 51, 128}
     light_red_pen = :wxPen.new(light_red, [{:width,  1}, {:style, WxEnum.wxSOLID}])
-    bright_red_pen = :wxPen.new(bright_red, [{:width,  1}, {:style, WxEnum.wxSOLID}])
 
-    if state.click_walk_graph do
-      :wxDC.setPen(dc, bright_red_pen)
-      for {a, edges} <- state.click_walk_graph do
-        for {b, _} <- edges do
-          :ok = :wxDC.drawLine(dc, a, b)
-        end
-      end
-    else
-      :wxDC.setPen(dc, light_red_pen)
-      for {a, edges} <- state.fixed_walk_graph do
-        for {b, _} <- edges do
-          :ok = :wxDC.drawLine(dc, a, b)
-        end
+    :wxDC.setPen(dc, light_red_pen)
+    for {a, edges} <- state.fixed_walk_graph do
+      for {b, _} <- edges do
+        :ok = :wxDC.drawLine(dc, a, b)
       end
     end
 
     :wxPen.destroy(light_red_pen)
+  end
+
+  # Draw the entire walk graph when we  have a "click"
+  def draw_walk_graph(dc, state) do
+    bright_red = {255, 87, 51, 128}
+    bright_red_pen = :wxPen.new(bright_red, [{:width,  1}, {:style, WxEnum.wxSOLID}])
+
+    :wxDC.setPen(dc, bright_red_pen)
+    for {a, edges} <- state.click_walk_graph do
+      for {b, _} <- edges do
+        :ok = :wxDC.drawLine(dc, a, b)
+      end
+    end
+
     :wxPen.destroy(bright_red_pen)
   end
 
@@ -525,11 +531,13 @@ defmodule Scurry.Wx do
       path
       |> Enum.chunk_every(2, 1)
       |> Enum.reduce(0, fn
-        [a, b], acc -> acc + Vector.distance(a, b)
-        _, acc -> acc
-      end)
+      [a, b], acc -> acc + Vector.distance(a, b)
+      _, acc -> acc
+    end)
+      |> Kernel.*(1.0) # make it a float so Float.floor works
+      |> Float.floor(2)
 
-    Logger.info("graph extend = #{usec_to_str(graph_usec)} a-star = #{usec_to_str(astar_usec)} distance = #{:erlang.float_to_binary(distance, [decimals: 2])}")
+    Logger.info("graph extend = #{usec_to_str(graph_usec)} a-star = #{usec_to_str(astar_usec)} distance = #{distance}")
 
     {new_graph, new_vertices, path}
   end
