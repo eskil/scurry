@@ -845,6 +845,7 @@ defmodule Scurry.WxEnum do
   def wxWS_EX_BLOCK_EVENTS, do: 2
   def wxWS_EX_VALIDATE_RECURSIVELY, do: 1
 
+  @dialyzer {:nowarn_function, wxWINDOW_STYLE_MASK: 0}
   def wxWINDOW_STYLE_MASK,
     do:
       wxVSCROLL()

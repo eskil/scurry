@@ -15,10 +15,12 @@ defmodule Scurry.Wx do
   @height 500
   @size {@width, @height}
 
+  @spec start() :: no_return()
   def start() do
     start_link([])
   end
 
+  @dialyzer {:nowarn_function, start_link: 1}
   def start_link(args) do
     :wx_object.start_link(__MODULE__, args, name: __MODULE__)
   end

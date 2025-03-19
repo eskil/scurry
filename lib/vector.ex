@@ -403,7 +403,7 @@ defmodule Scurry.Vector do
       iex> Vector.degrees({-1, -1})
       315
   """
-  @spec degrees(v :: vector()) :: float()
+  @spec degrees(v :: vector()) :: integer()
   def degrees({x, _y} = v) do
     # z is our "north" and it's pointing "right" to rotate.
     z = {0, -1}
@@ -416,6 +416,6 @@ defmodule Scurry.Vector do
     else
       d
     end
-    |> round
+    |> Kernel.round
   end
 end
