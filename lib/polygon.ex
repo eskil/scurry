@@ -81,6 +81,7 @@ defmodule Scurry.Polygon do
   def intersections(polygon, line, opts \\ []) do
     allow_points = Keyword.get(opts, :allow_points, false)
     prev_point = List.last(polygon)
+
     intersects_helper(polygon, line, prev_point, [])
     |> Enum.filter(fn
       {:intersection, _} -> true
@@ -88,7 +89,7 @@ defmodule Scurry.Polygon do
       _ -> false
     end)
     |> Enum.map(fn {_, point} -> point end)
-    |> Enum.dedup
+    |> Enum.dedup()
   end
 
   @doc """
@@ -106,11 +107,15 @@ defmodule Scurry.Polygon do
   if there's no intersection.
   """
   def first_intersection(polygon, {a, _b} = line) do
-    Enum.min_by(intersections(polygon, line), fn ip ->
-      Vector.distance(a, ip)
-    end, fn ->
-      nil
-    end)
+    Enum.min_by(
+      intersections(polygon, line),
+      fn ip ->
+        Vector.distance(a, ip)
+      end,
+      fn ->
+        nil
+      end
+    )
   end
 
   @doc """
@@ -128,18 +133,22 @@ defmodule Scurry.Polygon do
   if there's no intersection.
   """
   def last_intersection(polygon, {a, _b} = line) do
-    Enum.max_by(intersections(polygon, line), fn ip ->
-      Vector.distance(a, ip)
-    end, fn ->
-      nil
-    end)
+    Enum.max_by(
+      intersections(polygon, line),
+      fn ip ->
+        Vector.distance(a, ip)
+      end,
+      fn ->
+        nil
+      end
+    )
   end
 
   defp intersects_helper([], _line, _prev_point) do
     :nointersection
   end
 
-  defp intersects_helper([next_point|polygon], line, prev_point) do
+  defp intersects_helper([next_point | polygon], line, prev_point) do
     case Geo.line_segment_intersection(line, {prev_point, next_point}) do
       :parallel -> intersects_helper(polygon, line, next_point)
       :none -> intersects_helper(polygon, line, next_point)
@@ -153,7 +162,7 @@ defmodule Scurry.Polygon do
     acc
   end
 
-  defp intersects_helper([next_point|polygon], line, prev_point, acc) when is_list(acc) do
+  defp intersects_helper([next_point | polygon], line, prev_point, acc) when is_list(acc) do
     v = Geo.line_segment_intersection(line, {prev_point, next_point})
     intersects_helper(polygon, line, next_point, acc ++ [v])
   end
@@ -200,12 +209,13 @@ defmodule Scurry.Polygon do
       {[{1, 0.5}], [{0, 0}, {2, 0}, {2, 1}, {0, 1}]}
   """
   def classify_vertices(polygon) do
-    {concave, convex} = Enum.reduce(polygon, {0, []}, fn point, {idx, acc} ->
-      {idx + 1, acc ++ [{point, classify_vertex(polygon, idx)}]}
-    end)
-    |> elem(1)
-    |> Enum.reject(fn {_point, type} -> type == :neither end)
-    |> Enum.split_with(fn {_point, type} -> type == :concave end)
+    {concave, convex} =
+      Enum.reduce(polygon, {0, []}, fn point, {idx, acc} ->
+        {idx + 1, acc ++ [{point, classify_vertex(polygon, idx)}]}
+      end)
+      |> elem(1)
+      |> Enum.reject(fn {_point, type} -> type == :neither end)
+      |> Enum.split_with(fn {_point, type} -> type == :concave end)
 
     # Remove the type
     {Enum.map(concave, fn {p, _} -> p end), Enum.map(convex, fn {p, _} -> p end)}
@@ -240,9 +250,9 @@ defmodule Scurry.Polygon do
   """
   # See https://www.david-gouveia.com/pathfinding-on-a-2d-polygonal-map
   def classify_vertex(polygon, at) do
-    next = Enum.at(polygon, rem(at+1, length(polygon)))
+    next = Enum.at(polygon, rem(at + 1, length(polygon)))
     current = Enum.at(polygon, at)
-    prev = Enum.at(polygon, at-1)
+    prev = Enum.at(polygon, at - 1)
 
     left = Vector.sub(current, prev)
     right = Vector.sub(next, current)
@@ -330,36 +340,46 @@ defmodule Scurry.Polygon do
   end
 
   # See https://www.david-gouveia.com/pathfinding-on-a-2d-polygonal-map
-  def is_inside?(polygon, {_, _}=point, opts) when is_list(polygon) do
+  def is_inside?(polygon, {_, _} = point, opts) when is_list(polygon) do
     epsilon = 0.5
 
     prev = Enum.at(polygon, -1)
     prev_sq_dist = Vector.distance_squared(prev, point)
 
-    {_, _, is_inside} = Enum.reduce_while(polygon, {prev, prev_sq_dist, false},
-      fn current, {prev, prev_sq_dist, inside} ->
+    {_, _, is_inside} =
+      Enum.reduce_while(polygon, {prev, prev_sq_dist, false}, fn current,
+                                                                 {prev, prev_sq_dist, inside} ->
         sq_dist = Vector.distance_squared(current, point)
-        if (prev_sq_dist + sq_dist + 2.0 * :math.sqrt(prev_sq_dist * sq_dist) - Vector.distance_squared(current, prev) < epsilon) do
+
+        if prev_sq_dist + sq_dist + 2.0 * :math.sqrt(prev_sq_dist * sq_dist) -
+             Vector.distance_squared(current, prev) < epsilon do
           allow = Keyword.get(opts, :allow_border, true)
           {:halt, {prev, prev_sq_dist, allow}}
         else
           {x, y} = point
           {px, _py} = prev
-          {left, right} = if (x > px) do
-            {prev, current}
-          else
-            {current, prev}
-          end
+
+          {left, right} =
+            if x > px do
+              {prev, current}
+            else
+              {current, prev}
+            end
+
           {lx, ly} = left
           {rx, ry} = right
-          inside = if (lx < x and x <= rx and (y - ly) * (rx - lx) < (ry - ly) * (x - lx)) do
-            not inside
-          else
-            inside
-          end
+
+          inside =
+            if lx < x and x <= rx and (y - ly) * (rx - lx) < (ry - ly) * (x - lx) do
+              not inside
+            else
+              inside
+            end
+
           {:cont, {current, sq_dist, inside}}
         end
       end)
+
     is_inside
   end
 
@@ -394,7 +414,7 @@ defmodule Scurry.Polygon do
     polygon
     |> Enum.chunk_every(2, 1, Enum.slice(polygon, 0, 2))
     |> Enum.map(fn [a, b] -> {a, b} end)
-    |> Enum.min_by(&(Geo.distance_to_segment(&1, point)))
+    |> Enum.min_by(&Geo.distance_to_segment(&1, point))
   end
 
   @doc """
@@ -416,7 +436,10 @@ defmodule Scurry.Polygon do
     {{x1, y1}, {x2, y2}} = nearest_edge(polygon, point)
 
     {x, y} = point
-    u = (((x - x1) * (x2 - x1)) + ((y - y1) * (y2 - y1))) / (((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)))
+
+    u =
+      ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) /
+        ((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))
 
     cond do
       u < 0 -> {x1, y1}
@@ -440,6 +463,7 @@ defmodule Scurry.Polygon do
       polygon
       |> Enum.chunk_every(2, 1, Enum.slice(polygon, 0, 2))
       |> Enum.reduce(0, fn [{x1, y1}, {x2, y2}], acc -> acc + (x2 - x1) * (y2 + y1) end)
+
     a < 0
   end
 end

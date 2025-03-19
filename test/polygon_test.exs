@@ -150,7 +150,9 @@ defmodule Scurry.PolygonTest do
   test "classify_vertices" do
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
-    assert Polygon.classify_vertices(polygon) == {[{10, 10}], [{0, 0}, {20, 0}, {20, 20}, {0, 20}]}
+
+    assert Polygon.classify_vertices(polygon) ==
+             {[{10, 10}], [{0, 0}, {20, 0}, {20, 20}, {0, 20}]}
   end
 
   test "classify_vertices triangle" do
@@ -193,5 +195,4 @@ defmodule Scurry.PolygonTest do
     assert Polygon.nearest_point_on_edge(polygon, {-1, -1}) == {0, 0}
     assert Polygon.nearest_point_on_edge(polygon, {-1, 3}) == {0, 2}
   end
-
 end

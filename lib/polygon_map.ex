@@ -2,30 +2,37 @@ defmodule Scurry.PolygonMap do
   @moduledoc """
   Utility functions to work on a polygon map.
 
-  A polygon map is a set of a primary polygon - the main boundary that outlines
-  the world - and a list of polygons that make "holes" in the main polygon.
+  A polygon map is a set of a primary polygon - the **main** boundary that
+  outlines the world - and a list of polygons that make **holes** in the main
+  polygon.
 
   See `Polygon` for details on how polygons are composed.
 
-  The use case is eg. making a map with obstacles, and use the `Astar` module
-  to find the shortest path between points in the map.
+  The use case is eg. making a map (the **main** polygon) with obstacles (the
+  **holes**), and use the `Astar` module to find the shortest path between
+  points in the map.
   """
 
   alias Scurry.Polygon
   alias Scurry.Vector
 
   @doc """
-  Given a polygon map (main, & holes), returns a list of vertices.
+  Given a polygon map (main & holes), returns a list of vertices.
 
   The vertices are the main polygon's concave vertices and the convex ones of
   the holes.
+
+  These are used when generating the walk map, since only the main's concave
+  and the holes' convex ones limit where you can traverse in a 2d map.
   """
   def get_vertices(polygon, holes) do
     {concave, _convex} = Polygon.classify_vertices(polygon)
-    convex = Enum.reduce(holes, [], fn points, acc ->
-      {_concave, convex} = Polygon.classify_vertices(points)
-      acc ++ convex
-    end)
+
+    convex =
+      Enum.reduce(holes, [], fn points, acc ->
+        {_concave, convex} = Polygon.classify_vertices(points)
+        acc ++ convex
+      end)
 
     concave ++ convex
   end
@@ -62,7 +69,7 @@ defmodule Scurry.PolygonMap do
   * `polygons`, a `%{main: [...], hole: [...], hole2: [...]}` polygon map.
   * `graph`, the fixed graph, eg. created via `create_graph/2`.
   * `vertices` the nodes used to create `graph`.
-  * `points` a list of coordinates, `[{x, y}, {x, y}...]`, to extend
+  * `points` a list of coordinates, `[{x, y}, {x, y}...]`, to extend with
   * `cost_fun`, a `node, node :: cost` function, defaults to `Vector.distance`
 
   Returns an extended graph plus the combined list of vertices and new points,
@@ -89,6 +96,7 @@ defmodule Scurry.PolygonMap do
     merge_fun = fn _k, v1, v2 ->
       Enum.dedup(v1 ++ v2)
     end
+
     graph =
       graph
       |> Map.merge(set_a, merge_fun)
@@ -135,15 +143,19 @@ defmodule Scurry.PolygonMap do
     point
   end
 
-  defp nearest_point_in_holes([hole|holes], point) do
-    nearest_point_in_holes_helper([hole|holes], point, Polygon.is_inside?(hole, point, allow_border: false))
+  defp nearest_point_in_holes([hole | holes], point) do
+    nearest_point_in_holes_helper(
+      [hole | holes],
+      point,
+      Polygon.is_inside?(hole, point, allow_border: false)
+    )
   end
 
-  defp nearest_point_in_holes_helper([_hole|holes], point, false) do
+  defp nearest_point_in_holes_helper([_hole | holes], point, false) do
     nearest_point_in_holes(holes, point)
   end
 
-  defp nearest_point_in_holes_helper([hole|_holes], point, true) do
+  defp nearest_point_in_holes_helper([hole | _holes], point, true) do
     nearest_boundary_point_helper(hole, point)
   end
 
@@ -176,15 +188,20 @@ defmodule Scurry.PolygonMap do
     cond do
       Polygon.is_outside?(polygon, p, allow_border: false) ->
         p
+
       Polygon.is_outside?(polygon, a, allow_border: false) ->
         a
+
       Polygon.is_outside?(polygon, b, allow_border: false) ->
         b
+
       Polygon.is_outside?(polygon, c, allow_border: false) ->
         c
+
       Polygon.is_outside?(polygon, d, allow_border: false) ->
         d
     end
+
     # If none of the points are outside, we'll pleasantly crash and we should
     # improve this to continuously move outwards a reasonable amount until
     # we're outside.
@@ -216,25 +233,38 @@ defmodule Scurry.PolygonMap do
   """
   def is_line_of_sight?(polygon, holes, line) do
     {start, stop} = line
+
     cond do
-      not Polygon.is_inside?(polygon, start) or not Polygon.is_inside?(polygon, stop) -> false
-      Vector.distance(start, stop) < 0.1 -> true
-      not Enum.all?([polygon] ++ holes, fn points -> is_line_of_sight_helper(points, line) end) -> false
+      not Polygon.is_inside?(polygon, start) or not Polygon.is_inside?(polygon, stop) ->
+        false
+
+      Vector.distance(start, stop) < 0.1 ->
+        true
+
+      not Enum.all?([polygon] ++ holes, fn points -> is_line_of_sight_helper(points, line) end) ->
+        false
+
       true ->
-          # This part ensures that two vertices across from each other are not
-          # considered LOS. Without this, eg. a box-shaped hole would have
-          # opposing corners be a LOS, except that the middle of the line falls
-          # inside the hole per this check.
-          middle = Vector.div(Vector.add(start, stop), 2)
-          cond do
-            not Polygon.is_inside?(polygon, middle) -> false
-            Enum.all?(holes, fn hole -> Polygon.is_outside?(hole, middle, allow_border: false) end) -> true
-            true -> false
-          end
+        # This part ensures that two vertices across from each other are not
+        # considered LOS. Without this, eg. a box-shaped hole would have
+        # opposing corners be a LOS, except that the middle of the line falls
+        # inside the hole per this check.
+        middle = Vector.div(Vector.add(start, stop), 2)
+
+        cond do
+          not Polygon.is_inside?(polygon, middle) ->
+            false
+
+          Enum.all?(holes, fn hole -> Polygon.is_outside?(hole, middle, allow_border: false) end) ->
+            true
+
+          true ->
+            false
+        end
     end
   end
 
-  defp is_line_of_sight_helper(polygon, {x, y}=line) do
+  defp is_line_of_sight_helper(polygon, {x, y} = line) do
     # We get all intersections and reject the ones that are identical to the
     # line. This allows us to enable "allow_points: true", but only see
     # intersections with other lines and _other_ polygon vertices (points).
@@ -244,10 +274,11 @@ defmodule Scurry.PolygonMap do
 
     Polygon.intersections(polygon, line, allow_points: true)
     |> Enum.map(fn {x, y} -> {round(x), round(y)} end)
-    |> Enum.reject(fn p -> p == x or p == y end)
-    == []
+    |> Enum.reject(fn p -> p == x or p == y end) ==
+      []
   end
 
+  # Get all edges from points_a and point_b for which there's line-of-sight.
   defp get_edges(polygon, holes, points_a, points_b, cost_fun) do
     is_reachable? = fn a, b -> is_line_of_sight?(polygon, holes, {a, b}) end
 
@@ -266,8 +297,10 @@ defmodule Scurry.PolygonMap do
               {b_idx + 1, acc2}
             end
           end)
+
         {a_idx + 1, Map.put(acc1, a, inner_edges)}
       end)
+
     Map.new(all_edges)
   end
 end

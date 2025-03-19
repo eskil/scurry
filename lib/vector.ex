@@ -2,16 +2,22 @@ defmodule Scurry.Vector do
   @moduledoc """
   Functions to work on 2D vectors.
 
-  Vectors are represented as tuples of x and y components, `{x, y}`. This
+  Vectors are represented as tuples of x and y components, `{x :: number, y :: number}`. This
   module provides basic trigonometry functions.
+
+  See [Euclidian Vector](https://en.wikipedia.org/wiki/Euclidean_vector) on
+  Wikipedia for further descriptions of the maths and use cases.
   """
+
+  @typedoc "A vector is represented as a tuple `{x, y}`, it's x and y components, both `t:number/0`."
+  @type vector() :: {x :: number(), y :: number()}
 
   @doc """
   Get the length of a vector, aka magnitude.
 
   ## Params
 
-  * `v`, a tuple `{x, y}` of coordinates describing the vector.
+  * `v`, a `t:vector/0` describing the vector.
 
   Returns the length of the vector `v`.
 
@@ -23,7 +29,8 @@ defmodule Scurry.Vector do
       iex> Vector.len({12, 5})
       13.0
   """
-  def len({x, y}=_v) do
+  @spec len(v :: vector()) :: float()
+  def len({x, y} = _v) do
     :math.sqrt(x * x + y * y)
   end
 
@@ -32,16 +39,17 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a tuple `{x, y}` of coordinates describing the first vector.
-  * `v2` a tuple `{x, y}` of coordinates describing the second vector.
+  * `v1` a `t:vector/0` describing the first vector.
+  * `v2` a `t:vector/0` describing the second vector.
 
-  Returns the two vectors added together.
+  Returns the resulting vector of adding the two vectors together.
 
   ## Examples
       iex> Vector.add({1, 2}, {3, 4})
       {4, 6}
   """
-  def add({ax, ay}=_v1, {bx, by}=_v2) do
+  @spec add(v1 :: vector(), v2 :: vector()) :: vector()
+  def add({ax, ay} = _v1, {bx, by} = _v2) do
     {ax + bx, ay + by}
   end
 
@@ -50,16 +58,17 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a tuple `{x, y}` of coordinates describing the first vector.
-  * `v2` a tuple `{x, y}` of coordinates describing the second vector.
+  * `v1` a `t:vector/0` describing the first vector.
+  * `v2` a `t:vector/0` describing the second vector.
 
-  Returns the the subtraction of `v2` from `v1`.
+  Returns the result vector of subtracting of `v2` from `v1`.
 
   ## Examples
       iex> Vector.sub({5, 7}, {1, 2})
       {4, 5}
   """
-  def sub({ax, ay}=_v1, {bx, by}=_v2) do
+  @spec sub(v1 :: vector(), v2 :: vector()) :: vector()
+  def sub({ax, ay} = _v1, {bx, by} = _v2) do
     {ax - bx, ay - by}
   end
 
@@ -68,14 +77,17 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v` a tuple `{x, y}` of coordinates describing the vector.
+  * `v` a `t:vector/0` describing the vector.
   * `c` the constant to divide by.
+
+  Returns the result of dividing `v` by `c`.
 
   ## Examples
       iex> Vector.div({10, 14}, 2)
       {5.0, 7.0}
   """
-  def div({x, y}=_v, c) do
+  @spec div(v :: vector(), c :: number()) :: vector()
+  def div({x, y} = _v, c) do
     {x / c, y / c}
   end
 
@@ -84,14 +96,17 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v` a tuple `{x, y}` of coordinates describing the vector.
+  * `v` a `t:vector/0` describing the vector.
   * `c` the constant to multiple by.
+
+  Returns the result of multiplying `v` by `c`.
 
   ## Examples
       iex> Vector.mul({5, 7}, 2)
       {10, 14}
   """
-  def mul({x, y}=_v, c) do
+  @spec mul(v :: vector(), c :: number()) :: vector()
+  def mul({x, y} = _v, c) do
     {x * c, y * c}
   end
 
@@ -100,12 +115,14 @@ defmodule Scurry.Vector do
 
   The distance is the length of the vector between the ends (second tuple) of the vectors.
 
-  This is equivalent to the square root of the `distance_squared`.
+  This is equivalent to the square root of the `distance_squared/2`.
 
   ## Params
 
-  * `v1` a tuple `{x, y}` of coordinates describing the first vector.
-  * `v2` a tuple `{x, y}` of coordinates describing the second vector.
+  * `v1` a `t:vector/0` describing the first vector.
+  * `v2` a `t:vector/0` describing the second vector.
+
+  Returns the distance between the ends of `v1` and `v2`.
 
   ## Examples
       iex> Vector.distance({0, 0}, {1, 1})
@@ -113,19 +130,22 @@ defmodule Scurry.Vector do
       iex> Vector.distance({5, 7}, {2, 3})
       5.0
   """
-  def distance({_ax, _ay}=v1, {_bx, _by}=v2) do
+  @spec distance(v1 :: vector(), v2 :: vector()) :: float()
+  def distance({_ax, _ay} = v1, {_bx, _by} = v2) do
     :math.sqrt(distance_squared(v1, v2))
   end
 
   @doc """
   Get the distance squared of two vectors.
 
-  This is equivalent to the square of the `distance`.
+  This is equivalent to the square of the `distance/2`.
 
   ## Params
 
-  * `v1` a tuple `{x, y}` of coordinates describing the first vector.
-  * `v2` a tuple `{x, y}` of coordinates describing the second vector.
+  * `v1` a `t:vector/0` describing the first vector.
+  * `v2` a `t:vector/0` describing the second vector.
+
+  Returns the squared distance between the ends of `v1` and `v2`.
 
   ## Examples
       iex> Vector.distance_squared({0, 0}, {1, 1})
@@ -133,7 +153,8 @@ defmodule Scurry.Vector do
       iex> Vector.distance_squared({5, 7}, {2, 3})
       25.0
   """
-  def distance_squared({ax, ay}=_v1, {bx, by}=_v2) do
+  @spec distance_squared(v1 :: vector(), v2 :: vector()) :: float()
+  def distance_squared({ax, ay} = _v1, {bx, by} = _v2) do
     :math.pow(ax - bx, 2) + :math.pow(ay - by, 2)
   end
 
@@ -141,11 +162,13 @@ defmodule Scurry.Vector do
   Normalise a vector to length 1.
 
   This shortens the vector by it's length, so the resulting vector `w` has
-  `len(w) == 1`, but same x/y ratio.
+  `len(w) == 1`, and same x/y ratio.
 
   ## Params
 
-  * `v` a tuple `{x, y}` of coordinates describing the vector to normalise.
+  * `v` a `t:vector/0` describing the vector to normalise.
+
+  Returns a `t:vector/0` with length 1, and same x/y ratio.
 
   ## Examples
       iex> Vector.normalise({0, 1})
@@ -155,7 +178,8 @@ defmodule Scurry.Vector do
       iex> Vector.normalise({10, 10})
       {0.7071067811865475, 0.7071067811865475}
   """
-  def normalise({x, y}=_v) do
+  @spec normalise(v :: vector()) :: vector()
+  def normalise({x, y} = _v) do
     l = len({x, y})
     {x / l, y / l}
   end
@@ -165,14 +189,17 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a tuple `{x, y}` of coordinates describing the first vector.
-  * `v2` a tuple `{x, y}` of coordinates describing the second vector.
+  * `v1` a `t:vector/0` describing the first vector.
+  * `v2` a `t:vector/0` describing the second vector.
+
+  Returns the dot product of `v1` and `v2`.
 
   ## Examples
       iex> Vector.dot({1, 2}, {3, 4})
       11
   """
-  def dot({ax, ay}=_v1, {bx, by}=_v2) do
+  @spec dot(v1 :: vector(), v2 :: vector()) :: float()
+  def dot({ax, ay} = _v1, {bx, by} = _v2) do
     ax * bx + ay * by
   end
 
@@ -181,21 +208,24 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a tuple `{x, y}` of coordinates describing the first vector.
-  * `v2` a tuple `{x, y}` of coordinates describing the second vector.
+  * `v1` a `t:vector/0` describing the first vector.
+  * `v2` a `t:vector/0` describing the second vector.
+
+  Returns the cross product of `v1` and `v2`.
 
   ## Examples
       iex> Vector.cross({1, 2}, {3, 4})
       -2
   """
-  def cross({ax, ay}=_v1, {bx, by}=_v2) do
+  @spec cross(v1 :: vector(), v2 :: vector()) :: float()
+  def cross({ax, ay} = _v1, {bx, by} = _v2) do
     ax * by - ay * bx
   end
 
   @doc """
   Get the magnitude of a vector, aka len.
 
-  This is just another word for `len`.
+  This is an alias for `len/2`.
 
   ## Examples
       iex> Vector.mag({1, 1})
@@ -205,6 +235,7 @@ defmodule Scurry.Vector do
       iex> Vector.mag({12, 5})
       13.0
   """
+  @spec mag(v :: vector()) :: float()
   def mag(v), do: len(v)
 
   @doc """
@@ -212,7 +243,7 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v` a tuple `{x, y}` of coordinates describing the vector to normalise.
+  * `v` a `t:vector/0` describing the vector to normalise.
 
   Returns the angle in radians in relationship to the x-axis.
 
@@ -234,27 +265,28 @@ defmodule Scurry.Vector do
       iex> Vector.angle({1, -1})
       5.497787143782138
   """
-  def angle({x, y}=_v) when x < 0 and y < 0 do
-    :math.pi + angle({-x, -y})
+  @spec angle(v :: vector()) :: float()
+  def angle({x, y} = _v) when x < 0 and y < 0 do
+    :math.pi() + angle({-x, -y})
   end
 
-  def angle({x, y}=_v) when x < 0 do
-    :math.pi - angle({-x, y})
+  def angle({x, y} = _v) when x < 0 do
+    :math.pi() - angle({-x, y})
   end
 
-  def angle({x, y}=_v) when y < 0 do
-    2 * :math.pi - angle({x, -y})
+  def angle({x, y} = _v) when y < 0 do
+    2 * :math.pi() - angle({x, -y})
   end
 
-  def angle({0.0, _y}=_v) do
-    :math.pi / 2
+  def angle({0.0, _y} = _v) do
+    :math.pi() / 2
   end
 
-  def angle({0, _y}=_v) do
-    :math.pi / 2
+  def angle({0, _y} = _v) do
+    :math.pi() / 2
   end
 
-  def angle({x, y}=_v) do
+  def angle({x, y} = _v) do
     # East-Counterclockwise Convention
     :math.atan(y / x)
   end
@@ -262,46 +294,55 @@ defmodule Scurry.Vector do
   @doc """
   Calls trunc on a vector `v` to make the vector work with WxWidgets (requires integers).
 
+  The name ends in `_pos` to avoid any confusion/collision with `Kernel.trunc/1`.
+
   ## Params
 
-  * `v` a tuple `{x, y}` of coordinates describing the vector.
+  * `v` a `t:vector/0` describing the vector.
 
-  Returns the vector with it's components converted to integers using `trunc/1`.
+  Returns the vector with it's components converted to integers using `Kernel.trunc/1`.
 
   ## Examples
       iex> Vector.trunc_pos({10.1, 10.9})
       {10, 10}
   """
-  def trunc_pos({x, y}=_v) do
-    {trunc(x), trunc(y)}
+  @spec trunc_pos(v :: vector()) :: vector()
+  def trunc_pos({x, y} = _v) do
+    {Kernel.trunc(x), Kernel.trunc(y)}
   end
 
   @doc """
   Calls round on a vector `v` to make the vector work with wx (requires integers).
 
+  The name ends in `_pos` to avoid any confusion/collision with `Kernel.found/1`.
+
   ## Params
 
-  * `v` a tuple `{x, y}` of coordinates describing the vector.
+  * `v` a `t:vector/0` describing the vector.
 
-  Returns the vector with it's components converted to integers using `round/1`.
+  Returns the vector with it's components converted to integers using `Kernel.round/1`.
 
   ## Examples
       iex> Vector.round_pos({10.1, 10.9})
       {10, 11}
   """
-  def round_pos({x, y}=_v) do
-    {round(x), round(y)}
+  @spec round_pos(v :: vector()) :: vector()
+  def round_pos({x, y} = _v) do
+    {Kernel.round(x), Kernel.round(y)}
   end
 
   @doc """
   This is a graph oriented degree.
 
-  Graph degrees are oriented as for a graph layout. Right (along the x-axis) is
-  0, up (along y-axis) is 90, 45 is "north-east / up and to the left".
+  Graph degrees are oriented as for a graph layout.
+
+  * Right (along the x-axis) is 0°
+  * Up (along y-axis) is 90°,
+  * 45° is "north-east / up and to the left".
 
   ## Params
 
-  * `v` a tuple `{x, y}` of coordinates describing the vector.
+  * `v` a `t:vector/0` describing the vector.
 
   Returns the vector in degrees relative to the x-axis.
 
@@ -311,7 +352,7 @@ defmodule Scurry.Vector do
       iex> Vector.degrees_graph({0, 1})
       90.0
       iex> Vector.degrees_graph({1, 0})
-      -0.0
+      0.0
       iex> Vector.degrees_graph({-1, 1})
       135.0
       iex> Vector.degrees_graph({-1, 0})
@@ -323,20 +364,24 @@ defmodule Scurry.Vector do
       iex> Vector.degrees_graph({1, -1})
       315.0
   """
-  def degrees_graph({_x, _y}=v) do
-    angle(v) * (180 / :math.pi)
+  @spec degrees_graph(v :: vector()) :: float()
+  def degrees_graph({_x, _y} = v) do
+    angle(v) * (180 / :math.pi())
   end
 
   @doc """
   This is a screen oriented degree.
 
-  Screen degrees are in North=up (0) South=down (180) degrees. Vectors are in
-  x,y screen coordinate, so `1,1` = 135 degrees (down to the right/ south-east)
-  from `0,0`, the top left corner of `0,0`.
+  Screen degrees are in
+  * North=up (0)
+  * South=down (180) degrees.
+
+  Vectors are in `(x,y)` screen coordinate, so `(1,1)` = 135 degrees (down to the
+  right/ south-east) from `0,0`, the top left corner is `0,0`.
 
   ## Params
 
-  * `v` a tuple `{x, y}` of coordinates describing the vector.
+  * `v` a `t:vector/0` of coordinates describing the vector.
 
   Returns the vector in degrees relative to the y-axis.
 
@@ -358,12 +403,14 @@ defmodule Scurry.Vector do
       iex> Vector.degrees({-1, -1})
       315
   """
-  def degrees({x, _y}=v) do
+  @spec degrees(v :: vector()) :: float()
+  def degrees({x, _y} = v) do
     # z is our "north" and it's pointing "right" to rotate.
     z = {0, -1}
     d = dot(v, z)
     cos_a = d / (len(v) * len(z))
-    d = :math.acos(cos_a) * (180 / :math.pi)
+    d = :math.acos(cos_a) * (180 / :math.pi())
+
     if x < 0 do
       360 - d
     else

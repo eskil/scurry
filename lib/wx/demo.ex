@@ -48,14 +48,14 @@ defmodule Scurry.Wx do
     :wxPanel.connect(panel, :enter_window)
     :wxPanel.connect(panel, :leave_window)
 
-    sizer = :wxBoxSizer.new(WxEnum.wxVERTICAL)
-    :wxSizer.add(sizer, panel, [proportion: 1, flag: WxEnum.wxSHAPED])
+    sizer = :wxBoxSizer.new(WxEnum.wxVERTICAL())
+    :wxSizer.add(sizer, panel, proportion: 1, flag: WxEnum.wxSHAPED())
     :wxSizer.setMinSize(sizer, @size)
     :wxFrame.setSizerAndFit(frame, sizer)
 
     :wxFrame.show(frame)
 
-    cursor = :wxCursor.new(WxEnum.wxCURSOR_BLANK)
+    cursor = :wxCursor.new(WxEnum.wxCURSOR_BLANK())
     :wxWindow.setCursor(panel, cursor)
 
     # This is what we draw on.
@@ -71,16 +71,14 @@ defmodule Scurry.Wx do
     walk_vertices = PolygonMap.get_vertices(polygon, holes)
     walk_graph = PolygonMap.create_graph(polygon, holes, walk_vertices)
 
-    Logger.info("walk graphs = #{inspect walk_graph, pretty: true}")
+    Logger.info("walk graphs = #{inspect(walk_graph, pretty: true)}")
 
     state = %{
       wx_frame: frame,
       wx_panel: panel,
       wx_memory_dc: memory_dc,
       wx_sizer: sizer,
-
       updated_at: nil,
-
       timer_ref: timer_ref,
       slice: slice,
 
@@ -88,7 +86,6 @@ defmodule Scurry.Wx do
       start: start,
       # Where the cursor is, also our stop point for saerch
       cursor: nil,
-
       polygon: polygon,
       holes: holes,
 
@@ -104,8 +101,9 @@ defmodule Scurry.Wx do
 
       # This is the extended walk graph path we'll draw in orange while the
       # mouse is being pressed
-      click_walk_graph: nil,
+      click_walk_graph: nil
     }
+
     {frame, state}
   end
 
@@ -114,7 +112,7 @@ defmodule Scurry.Wx do
   ##
 
   @impl true
-  def handle_event({:wx, _, _, _, {:wxSize, :size, {w, h}=_size, _}}=event, state) do
+  def handle_event({:wx, _, _, _, {:wxSize, :size, {w, h} = _size, _}} = event, state) do
     Logger.info("received size event: #{inspect(event)}")
     # {w, h} = wx_aspect_ratio({w, h}, 640 / 480)
     # Logger.info("size #{inspect size} = #{w} #{h}")
@@ -127,103 +125,123 @@ defmodule Scurry.Wx do
   end
 
   @impl true
-  def handle_event({:wx, _, _, _, {:wxClose, :close_window}}=event, state) do
+  def handle_event({:wx, _, _, _, {:wxClose, :close_window}} = event, state) do
     Logger.info("received close event: #{inspect(event)}")
     {:stop, :normal, state}
   end
 
   @impl true
-  def handle_event({:wx, _id, _wx_ref, _something,
-                    {:wxMouse, :enter_window,
-                     x, y,
-                     _left_down, _middle_down, _right_down,
-                     _control_down, _shift_down, _alt_down, _meta_down,
-                     _wheel_rotation, _wheel_delta, _lines_per_action}}=_event, state) do
+  def handle_event(
+        {:wx, _id, _wx_ref, _something,
+         {:wxMouse, :enter_window, x, y, _left_down, _middle_down, _right_down, _control_down,
+          _shift_down, _alt_down, _meta_down, _wheel_rotation, _wheel_delta,
+          _lines_per_action}} = _event,
+        state
+      ) do
     {:noreply, %{state | cursor: {x, y}}}
   end
 
   @impl true
-  def handle_event({:wx, _id, _wx_ref, _something,
-                    {:wxMouse, :leave_window,
-                     _x, _y,
-                     _left_down, _middle_down, _right_down,
-                     _control_down, _shift_down, _alt_down, _meta_down,
-                     _wheel_rotation, _wheel_delta, _lines_per_action}}=_event, state) do
+  def handle_event(
+        {:wx, _id, _wx_ref, _something,
+         {:wxMouse, :leave_window, _x, _y, _left_down, _middle_down, _right_down, _control_down,
+          _shift_down, _alt_down, _meta_down, _wheel_rotation, _wheel_delta,
+          _lines_per_action}} = _event,
+        state
+      ) do
     {:noreply, %{state | cursor: nil}}
   end
 
   @impl true
-  def handle_event({:wx, _id, _wx_ref, _something,
-                    {:wxMouse, :motion, x, y,
-                     true, _middle_down, _right_down,
-                     _control_down, _shift_down, _alt_down, _meta_down,
-                     _wheel_rotation, _wheel_delta, _lines_per_action}}=_event, state
-  ) do
+  def handle_event(
+        {:wx, _id, _wx_ref, _something,
+         {:wxMouse, :motion, x, y, true, _middle_down, _right_down, _control_down, _shift_down,
+          _alt_down, _meta_down, _wheel_rotation, _wheel_delta, _lines_per_action}} = _event,
+        state
+      ) do
     stop = {x, y}
-    {graph, _vertices, path} = get_updated_graph_vertices_path(state.polygon, state.holes, state.fixed_walk_vertices, state.fixed_walk_graph, state.start, stop)
 
-    {:noreply, %{
-        state |
-        click_walk_graph: graph,
-        cursor: stop,
-        path: path,
-     }
-    }
+    {graph, _vertices, path} =
+      get_updated_graph_vertices_path(
+        state.polygon,
+        state.holes,
+        state.fixed_walk_vertices,
+        state.fixed_walk_graph,
+        state.start,
+        stop
+      )
+
+    {:noreply,
+     %{
+       state
+       | click_walk_graph: graph,
+         cursor: stop,
+         path: path
+     }}
   end
 
   @impl true
-  def handle_event({:wx, _id, _wx_ref, _something,
-                    {:wxMouse, :motion, x, y,
-                     _left_down, _middle_down, _right_down,
-                     _control_down, _shift_down, _alt_down, _meta_down,
-                     _wheel_rotation, _wheel_delta, _lines_per_action}}=_event, state) do
+  def handle_event(
+        {:wx, _id, _wx_ref, _something,
+         {:wxMouse, :motion, x, y, _left_down, _middle_down, _right_down, _control_down,
+          _shift_down, _alt_down, _meta_down, _wheel_rotation, _wheel_delta,
+          _lines_per_action}} = _event,
+        state
+      ) do
     {:noreply, %{state | cursor: {x, y}}}
   end
 
   @impl true
-  def handle_event({:wx, _id, _wx_ref, _something,
-                    {:wxMouse, :left_down,
-                     x, y,
-                     _left_down, _middle_down, _right_down,
-                     _control_down, _shift_down, _alt_down, _meta_down,
-                     _wheel_rotation, _wheel_delta, _lines_per_action}}=_event,
-    state
-  ) do
-    Logger.info("click #{inspect {x, y}}")
+  def handle_event(
+        {:wx, _id, _wx_ref, _something,
+         {:wxMouse, :left_down, x, y, _left_down, _middle_down, _right_down, _control_down,
+          _shift_down, _alt_down, _meta_down, _wheel_rotation, _wheel_delta,
+          _lines_per_action}} = _event,
+        state
+      ) do
+    Logger.info("click #{inspect({x, y})}")
     stop = {x, y}
-    {graph, _vertices, path} = get_updated_graph_vertices_path(state.polygon, state.holes, state.fixed_walk_vertices, state.fixed_walk_graph, state.start, stop)
 
-    {:noreply, %{
-        state |
-        click_walk_graph: graph,
-        path: path,
-     }
-    }
+    {graph, _vertices, path} =
+      get_updated_graph_vertices_path(
+        state.polygon,
+        state.holes,
+        state.fixed_walk_vertices,
+        state.fixed_walk_graph,
+        state.start,
+        stop
+      )
+
+    {:noreply,
+     %{
+       state
+       | click_walk_graph: graph,
+         path: path
+     }}
   end
 
   @impl true
-  def handle_event({:wx, _id, _wx_ref, _something,
-                    {:wxMouse, :left_up,
-                     x, y,
-                     _left_up, _middle_down, _right_down,
-                     _control_down, _shift_down, _alt_down, _meta_down,
-                     _wheel_rotation, _wheel_delta, _lines_per_action}}=_event,
-    state
-  ) do
-    Logger.info("click #{inspect {x, y}}")
+  def handle_event(
+        {:wx, _id, _wx_ref, _something,
+         {:wxMouse, :left_up, x, y, _left_up, _middle_down, _right_down, _control_down,
+          _shift_down, _alt_down, _meta_down, _wheel_rotation, _wheel_delta,
+          _lines_per_action}} = _event,
+        state
+      ) do
+    Logger.info("click #{inspect({x, y})}")
     # Reset fields so we only show the debug graph
-    {:noreply, %{
-        state |
-        click_walk_graph: nil,
-        start: {x, y},
-        path: [],
-     }
-    }
+    {:noreply,
+     %{
+       state
+       | click_walk_graph: nil,
+         start: {x, y},
+         path: []
+     }}
   end
 
   @impl true
   def handle_event({:wx, _, _, _, _} = event, state) do
-    Logger.info("unhandled wx event #{inspect event, pretty: true}")
+    Logger.info("unhandled wx event #{inspect(event, pretty: true)}")
     {:noreply, state}
   end
 
@@ -232,7 +250,7 @@ defmodule Scurry.Wx do
   ##
 
   @impl true
-  def handle_sync_event({:wx, _, _, _, {:wxSize, :size, _, _}}=_xevent, wxo, state) do
+  def handle_sync_event({:wx, _, _, _, {:wxSize, :size, _, _}} = _xevent, wxo, state) do
     :wxEvent.skip(wxo)
     :wxFrame.layout(state.wx_frame)
     panel_size = :wxPanel.getSize(state.wx_panel)
@@ -243,12 +261,12 @@ defmodule Scurry.Wx do
   end
 
   @impl true
-  def handle_sync_event({:wx, _, _, _, {:wxPaint, :paint}}=_event, _, state) do
+  def handle_sync_event({:wx, _, _, _, {:wxPaint, :paint}} = _event, _, state) do
     dc = state.wx_memory_dc
     wx_cls(dc)
 
     {w, _h} = :wxPanel.getSize(state.wx_panel)
-    scale = w/ 640
+    scale = w / 640
 
     draw_polygons(dc, state)
     draw_a_b_line(dc, state)
@@ -268,7 +286,7 @@ defmodule Scurry.Wx do
 
   @impl true
   def handle_sync_event(event, _, _state) do
-    Logger.info("received sync event: #{inspect event, pretty: true}")
+    Logger.info("received sync event: #{inspect(event, pretty: true)}")
     :ok
   end
 
@@ -281,11 +299,13 @@ defmodule Scurry.Wx do
     # This is called at the configured frame rate, and updates state (nothing
     # in this example), rerenders the screen and schedules the timer for next
     # frame.
-    {elapsed_usec, {:ok, new_state}} = :timer.tc(fn ->
-      new_state = update(state)
-      :ok = render(new_state)
-      {:ok, new_state}
-    end)
+    {elapsed_usec, {:ok, new_state}} =
+      :timer.tc(fn ->
+        new_state = update(state)
+        :ok = render(new_state)
+        {:ok, new_state}
+      end)
+
     pause = max(0, state[:slice] - trunc(elapsed_usec / 1_000))
     timer_ref = Process.send_after(self(), :tick, pause)
     {:noreply, %{new_state | timer_ref: timer_ref}}
@@ -304,7 +324,7 @@ defmodule Scurry.Wx do
 
   @impl true
   def terminate(reason, state) do
-    Logger.info("Terminating, #{inspect reason}")
+    Logger.info("Terminating, #{inspect(reason)}")
     stop(state)
     exit(reason)
   end
@@ -329,7 +349,7 @@ defmodule Scurry.Wx do
   ## Render helper funtions
   ##
 
-  def draw_cursors(_dc, %{cursor: nil}=_state) do
+  def draw_cursors(_dc, %{cursor: nil} = _state) do
     :ok
   end
 
@@ -344,7 +364,7 @@ defmodule Scurry.Wx do
     # Draw stop (cursor) gray if inside hole (and inside main polygon), red
     # otherwise.
     if Polygon.is_inside?(state.polygon, state.cursor) do
-      if Enum.any?(state.holes, &(Polygon.is_inside?(&1, state.cursor))) do
+      if Enum.any?(state.holes, &Polygon.is_inside?(&1, state.cursor)) do
         wx_crosshair(dc, state.cursor, light_gray, size: 6)
       else
         wx_crosshair(dc, state.cursor, bright_red, size: 6)
@@ -358,22 +378,25 @@ defmodule Scurry.Wx do
     blue = {0, 150, 255}
     opaque_blue = {0, 150, 255, 64}
 
-    blue_pen = :wxPen.new(blue, [{:width,  1}, {:style, WxEnum.wxSOLID}])
+    blue_pen = :wxPen.new(blue, [{:width, 1}, {:style, WxEnum.wxSOLID()}])
 
-    brush = :wxBrush.new({0, 0, 0}, [{:style, WxEnum.wxSOLID}])
-    opaque_blue_brush = :wxBrush.new(opaque_blue, [{:style, WxEnum.wxSOLID}])
+    brush = :wxBrush.new({0, 0, 0}, [{:style, WxEnum.wxSOLID()}])
+    opaque_blue_brush = :wxBrush.new(opaque_blue, [{:style, WxEnum.wxSOLID()}])
 
     :wxDC.setBrush(dc, opaque_blue_brush)
     :wxDC.setPen(dc, blue_pen)
     :ok = :wxDC.drawPolygon(dc, state.polygon)
+
     for point <- state.polygon do
       wx_crosshair(dc, point, blue)
     end
 
     :wxDC.setBrush(dc, brush)
     :wxDC.setPen(dc, blue_pen)
+
     for hole <- state.holes do
       :ok = :wxDC.drawPolygon(dc, hole)
+
       for point <- hole do
         wx_crosshair(dc, point, blue)
       end
@@ -388,8 +411,8 @@ defmodule Scurry.Wx do
     blue = {0, 150, 255}
     opaque_blue = {0, 150, 255, 64}
 
-    blue_pen = :wxPen.new(blue, [{:width,  1}, {:style, WxEnum.wxSOLID}])
-    brush = :wxBrush.new(opaque_blue, [{:style, WxEnum.wxSOLID}])
+    blue_pen = :wxPen.new(blue, [{:width, 1}, {:style, WxEnum.wxSOLID()}])
+    brush = :wxBrush.new(opaque_blue, [{:style, WxEnum.wxSOLID()}])
 
     :wxDC.setPen(dc, blue_pen)
     :wxDC.setBrush(dc, brush)
@@ -402,41 +425,44 @@ defmodule Scurry.Wx do
     :wxBrush.destroy(brush)
   end
 
-  def draw_a_b_line(_dc, %{cursor: nil}=_state) do
+  def draw_a_b_line(_dc, %{cursor: nil} = _state) do
     :ok
   end
 
   def draw_a_b_line(dc, state) do
-    brush = :wxBrush.new({0, 0, 0}, [{:style, WxEnum.wxTRANSPARENT}])
+    brush = :wxBrush.new({0, 0, 0}, [{:style, WxEnum.wxTRANSPARENT()}])
     :wxDC.setBrush(dc, brush)
 
     light_gray = {211, 211, 211, 128}
-    light_gray_pen = :wxPen.new(light_gray, [{:width,  1}, {:style, WxEnum.wxSOLID}])
+    light_gray_pen = :wxPen.new(light_gray, [{:width, 1}, {:style, WxEnum.wxSOLID()}])
 
     bright_green = {0, 255, 0}
-    bright_green_pen = :wxPen.new(bright_green, [{:width,  1}, {:style, WxEnum.wxSOLID}])
+    bright_green_pen = :wxPen.new(bright_green, [{:width, 1}, {:style, WxEnum.wxSOLID()}])
 
     start = state.start
     stop = state.cursor
     line = {state.start, state.cursor}
+
     if PolygonMap.is_line_of_sight?(state.polygon, state.holes, line) do
       :wxDC.setPen(dc, bright_green_pen)
     else
       :wxDC.setPen(dc, light_gray_pen)
     end
+
     :ok = :wxDC.drawLine(dc, start, stop)
 
-    intersections = for poly <- [state.polygon] ++ state.holes do
-      Polygon.intersections(poly, line)
-    end
-    |> List.flatten
-    |> Enum.sort(fn ia, ib ->
-      v1 = Vector.sub(start, ia)
-      v2 = Vector.sub(start, ib)
-      # Sort closest to furthest
-      Vector.distance(start, v1) > Vector.distance(start, v2)
-    end)
-    |> Enum.map(&(Vector.trunc_pos(&1)))
+    intersections =
+      for poly <- [state.polygon] ++ state.holes do
+        Polygon.intersections(poly, line)
+      end
+      |> List.flatten()
+      |> Enum.sort(fn ia, ib ->
+        v1 = Vector.sub(start, ia)
+        v2 = Vector.sub(start, ib)
+        # Sort closest to furthest
+        Vector.distance(start, v1) > Vector.distance(start, v2)
+      end)
+      |> Enum.map(&Vector.trunc_pos(&1))
 
     for p <- intersections do
       wx_crosshair(dc, p, light_gray, size: 3)
@@ -444,7 +470,7 @@ defmodule Scurry.Wx do
 
     case intersections do
       [] -> nil
-      [p|_] -> wx_crosshair(dc, p, {255, 0, 0}, size: 3)
+      [p | _] -> wx_crosshair(dc, p, {255, 0, 0}, size: 3)
     end
 
     :wxPen.destroy(light_gray_pen)
@@ -455,9 +481,10 @@ defmodule Scurry.Wx do
   # Draw the entire walk graph when we don't have a "click"
   def draw_walk_graph(dc, %{click_walk_graph: nil} = state) do
     light_red = {255, 0, 0, 64}
-    light_red_pen = :wxPen.new(light_red, [{:width,  1}, {:style, WxEnum.wxSOLID}])
+    light_red_pen = :wxPen.new(light_red, [{:width, 1}, {:style, WxEnum.wxSOLID()}])
 
     :wxDC.setPen(dc, light_red_pen)
+
     for {a, edges} <- state.fixed_walk_graph do
       for {b, _} <- edges do
         :ok = :wxDC.drawLine(dc, a, b)
@@ -470,9 +497,10 @@ defmodule Scurry.Wx do
   # Draw the entire walk graph when we  have a "click"
   def draw_walk_graph(dc, state) do
     bright_red = {255, 87, 51, 128}
-    bright_red_pen = :wxPen.new(bright_red, [{:width,  1}, {:style, WxEnum.wxSOLID}])
+    bright_red_pen = :wxPen.new(bright_red, [{:width, 1}, {:style, WxEnum.wxSOLID()}])
 
     :wxDC.setPen(dc, bright_red_pen)
+
     for {a, edges} <- state.click_walk_graph do
       for {b, _} <- edges do
         :ok = :wxDC.drawLine(dc, a, b)
@@ -483,13 +511,15 @@ defmodule Scurry.Wx do
   end
 
   def draw_walk_path(dc, state) do
-    bright_green_pen = :wxPen.new({64, 255, 64}, [{:width,  2}, {:style, WxEnum.wxSOLID}])
+    bright_green_pen = :wxPen.new({64, 255, 64}, [{:width, 2}, {:style, WxEnum.wxSOLID()}])
     :wxDC.setPen(dc, bright_green_pen)
 
     pointsets = Enum.chunk_every(state.path, 2, 1)
+
     Enum.map(pointsets, fn
       [a, b] ->
         :ok = :wxDC.drawLine(dc, a, b)
+
       _ ->
         :ok
     end)
@@ -503,11 +533,11 @@ defmodule Scurry.Wx do
   end
 
   defp usec_to_str(usec) when usec < 1_000_000 do
-    "#{usec/1_000}ms"
+    "#{usec / 1_000}ms"
   end
 
-  defp usec_to_str(usec)  do
-    "#{usec/1_000_000}s"
+  defp usec_to_str(usec) do
+    "#{usec / 1_000_000}s"
   end
 
   def get_updated_graph_vertices_path(polygon, holes, vertices, graph, start, stop) do
@@ -516,28 +546,33 @@ defmodule Scurry.Wx do
     np = PolygonMap.nearest_point(polygon, holes, stop)
 
     # Extend the map to include start/stop (nearest)
-    {graph_usec, {new_graph, new_vertices}} = :timer.tc(fn ->
-      PolygonMap.extend_graph(graph, polygon, holes, vertices, [start, np])
-    end)
+    {graph_usec, {new_graph, new_vertices}} =
+      :timer.tc(fn ->
+        PolygonMap.extend_graph(graph, polygon, holes, vertices, [start, np])
+      end)
 
     # Search the graph from start to np using euclidean distance heur_fun
-    {astar_usec, path} = :timer.tc(fn ->
-      astar = Astar.search(new_graph, start, np, fn a, b -> Vector.distance(a, b) end)
-      Astar.path(astar)
-    end)
+    {astar_usec, path} =
+      :timer.tc(fn ->
+        astar = Astar.search(new_graph, start, np, fn a, b -> Vector.distance(a, b) end)
+        Astar.path(astar)
+      end)
 
     # Curtesy compute distance for the user
     distance =
       path
       |> Enum.chunk_every(2, 1)
       |> Enum.reduce(0, fn
-      [a, b], acc -> acc + Vector.distance(a, b)
-      _, acc -> acc
-    end)
-      |> Kernel.*(1.0) # make it a float so Float.floor works
+        [a, b], acc -> acc + Vector.distance(a, b)
+        _, acc -> acc
+      end)
+      # make it a float so Float.floor works
+      |> Kernel.*(1.0)
       |> Float.floor(2)
 
-    Logger.info("graph extend = #{usec_to_str(graph_usec)} a-star = #{usec_to_str(astar_usec)} distance = #{distance}")
+    Logger.info(
+      "graph extend = #{usec_to_str(graph_usec)} a-star = #{usec_to_str(astar_usec)} distance = #{distance}"
+    )
 
     {new_graph, new_vertices, path}
   end
@@ -546,7 +581,7 @@ defmodule Scurry.Wx do
   ## WxWidgets helper methods to draw things
   ##
 
-  @doc"""
+  @doc """
   Draw a crosshair at the given `{x, y}` and with the given `color`
 
   Returns `:ok`
@@ -566,17 +601,17 @@ defmodule Scurry.Wx do
     {x, y} = pos
     width = Keyword.get(options, :width, 1)
     size = Keyword.get(options, :size, 2)
-    pen = :wxPen.new(color, [{:width,  width}, {:style, WxEnum.wxSOLID}])
+    pen = :wxPen.new(color, [{:width, width}, {:style, WxEnum.wxSOLID()}])
 
     :wxDC.setPen(dc, pen)
-    :ok = :wxDC.drawLine(dc, {x, y-size}, {x, y+size})
-    :ok = :wxDC.drawLine(dc, {x-size, y}, {x+size, y})
+    :ok = :wxDC.drawLine(dc, {x, y - size}, {x, y + size})
+    :ok = :wxDC.drawLine(dc, {x - size, y}, {x + size, y})
     :wxPen.destroy(pen)
     :ok
   end
 
   def wx_cls(dc, color) do
-    brush = :wxBrush.new(color, [{:style, WxEnum.wxSOLID}])
+    brush = :wxBrush.new(color, [{:style, WxEnum.wxSOLID()}])
     :ok = :wxDC.setBackground(dc, brush)
     :ok = :wxDC.clear(dc)
     :wxBrush.destroy(brush)
@@ -586,10 +621,11 @@ defmodule Scurry.Wx do
     wx_cls(dc, {0, 0, 0})
   end
 
-  def wx_aspect_ratio({w, h}=_size, ratio) do
+  def wx_aspect_ratio({w, h} = _size, ratio) do
     cond do
-      w/h > ratio ->
+      w / h > ratio ->
         {w, round(w / ratio)}
+
       true ->
         {round(h * ratio), h}
     end
@@ -606,13 +642,13 @@ defmodule Scurry.Wx do
 
   # Transform a json polygon, `name, [[x, y], [x, y]...]` list to a `{name, [{x, y}, ...]}`.
   defp transform_walkbox({name, points}) do
-    points = Enum.map(points, &(transform_point(&1)))
+    points = Enum.map(points, &transform_point(&1))
     {name, points}
   end
 
   defp transform_walkboxes(polygons) do
     polygons
-    |> Enum.map(&(transform_walkbox(&1)))
+    |> Enum.map(&transform_walkbox(&1))
   end
 
   # In case the json polygon is closed (last == first) point, drop the last
@@ -627,7 +663,7 @@ defmodule Scurry.Wx do
 
   defp unclose_walkboxes(polygons) do
     polygons
-    |> Enum.map(&(unclose_walkbox(&1)))
+    |> Enum.map(&unclose_walkbox(&1))
   end
 
   @doc """
@@ -671,7 +707,7 @@ defmodule Scurry.Wx do
 
     {
       transform_point(json[:start]),
-      polygons,
+      polygons
     }
   end
 end

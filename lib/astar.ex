@@ -54,6 +54,7 @@ defmodule Scurry.Astar do
     # Logger.info("----------------------------------------- A-star")
     # Logger.info("graph = #{inspect graph, pretty: true}")
     queue = [start]
+
     %{
       start: start,
       stop: stop,
@@ -61,7 +62,6 @@ defmodule Scurry.Astar do
 
       # (node, node) :: cost function
       heur_fun: heur_fun,
-
       queue: queue,
       shortest_path_tree: %{},
       frontier: %{},
@@ -80,14 +80,14 @@ defmodule Scurry.Astar do
 
   defp add_to_queue(queue, node) do
     Enum.sort(queue ++ [node])
-    |> Enum.dedup
+    |> Enum.dedup()
   end
 
-  defp pathfind_helper(%{queue: []}=state) do
+  defp pathfind_helper(%{queue: []} = state) do
     state
   end
 
-  defp pathfind_helper(%{queue: [current|queue]}=state) do
+  defp pathfind_helper(%{queue: [current | queue]} = state) do
     # Logger.info("----------------------------------------- A-star search")
     # Logger.info("current = #{inspect current, pretty: true}")
     # Logger.info("state = #{inspect Map.delete(state, :graph), pretty: true}")
@@ -97,6 +97,7 @@ defmodule Scurry.Astar do
     cond do
       current == state.stop ->
         %{state | shortest_path_tree: spt}
+
       true ->
         edges = Map.get(state.graph, current, [])
 
@@ -122,35 +123,39 @@ defmodule Scurry.Astar do
                 # No reason to go back
                 # Logger.info("skip going back to start")
                 acc
+
               not Map.has_key?(frontier, node) ->
                 {
                   Map.put(frontier, node, current),
                   add_to_queue(queue, node),
                   Map.put(g_cost, node, shortest_distance_from_start),
-                  Map.put(f_cost, node, total_distance),
+                  Map.put(f_cost, node, total_distance)
                 }
-              shortest_distance_from_start < Map.get(g_cost, node, 0) and Map.get(spt, node) == nil ->
+
+              shortest_distance_from_start < Map.get(g_cost, node, 0) and
+                  Map.get(spt, node) == nil ->
                 {
                   Map.put(frontier, node, current),
                   queue,
                   Map.put(g_cost, node, shortest_distance_from_start),
-                  Map.put(f_cost, node, total_distance),
+                  Map.put(f_cost, node, total_distance)
                 }
+
               true ->
                 {frontier, queue, g_cost, f_cost}
             end
           end)
 
         new_state = %{
-          state |
-          queue: sort_queue(q, f_cost),
-          frontier: f,
-          f_cost: f_cost,
-          g_cost: g_cost,
-          shortest_path_tree: spt,
+          state
+          | queue: sort_queue(q, f_cost),
+            frontier: f,
+            f_cost: f_cost,
+            g_cost: g_cost,
+            shortest_path_tree: spt
         }
 
-      pathfind_helper(new_state)
+        pathfind_helper(new_state)
     end
   end
 
@@ -166,8 +171,9 @@ defmodule Scurry.Astar do
   """
   def path(state) do
     next = state.shortest_path_tree[state.stop]
+
     path(state, state.start, next, [state.stop])
-    |> Enum.reverse
+    |> Enum.reverse()
   end
 
   defp path(_state, _start, nil, acc) do

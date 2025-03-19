@@ -19,7 +19,7 @@ defmodule Scurry.Geo do
   Returns
   * `:on_segment` one line is on the other.
   * `:parallel` the lines are parallel and do not intersect.
-  * `{:point_intersection, {x, y}}` either line has an endpoint (`{x, y}`) on
+  * `{:point_intersection, {x, y}}` either line has an _endpoint_ (`{x, y}`) on
     the other line.
   * `{:intersection, {x, y}}` the lines intersect at `{x, y}`.
   * `:none` no intersection.
@@ -50,8 +50,10 @@ defmodule Scurry.Geo do
     else
       ua = ((bx2 - bx1) * (ay1 - by1) - (by2 - by1) * (ax1 - bx1)) / den
       ub = ((ax2 - ax1) * (ay1 - by1) - (ay2 - ay1) * (ax1 - bx1)) / den
+
       if ua >= 0.0 and ua <= 1.0 and ub >= 0.0 and ub <= 1.0 do
         {x, y} = {ax1 + ua * (ax2 - ax1), ay1 + ua * (ay2 - ay1)}
+
         if ua == 0.0 or ub == 1.0 or ua == 1.0 or ub == 0.0 do
           {:point_intersection, {x, y}}
         else
@@ -77,12 +79,14 @@ defmodule Scurry.Geo do
       iex> Geo.distance_to_segment_squared({{2, 0}, {2, 2}}, {0, 1})
       4.0
   """
-  def distance_to_segment_squared({{vx, vy}=v, {wx, wy}=w}=_line, {px, py}=point) do
+  def distance_to_segment_squared({{vx, vy} = v, {wx, wy} = w} = _line, {px, py} = point) do
     l2 = Vector.distance_squared(v, w)
+
     if l2 == 0.0 do
       Vector.distance_squared(point, v)
     else
       t = ((px - vx) * (wx - vx) + (py - vy) * (wy - vy)) / l2
+
       cond do
         t < 0 -> Vector.distance_squared(point, v)
         t > 1 -> Vector.distance_squared(point, w)
@@ -125,19 +129,21 @@ defmodule Scurry.Geo do
   Note that this doesn't handle segment overlap or points touching. Use
   `line_segment_intersection/2` instead for that level of detail.
   """
-  def do_lines_intersect?({{ax1, ay1}, {ax2, ay2}}=_l1, {{bx1, by1}, {bx2, by2}}=_l2) do
-    den = ((ax2 - ax1) * (by2 - by1)) - ((ay2 - ay1) * (bx2 - bx1))
+  def do_lines_intersect?({{ax1, ay1}, {ax2, ay2}} = _l1, {{bx1, by1}, {bx2, by2}} = _l2) do
+    den = (ax2 - ax1) * (by2 - by1) - (ay2 - ay1) * (bx2 - bx1)
+
     if den == 0 do
       false
     else
-      num1 = ((ay1 - by1) * (bx2 - bx1)) - ((ax1 - bx1) * (by2 - by1))
-      num2 = ((ay1 - by1) * (ax2 - ax1)) - ((ax1 - bx1) * (ay2 - ay1))
-      if (num1 == 0 or num2 == 0) do
+      num1 = (ay1 - by1) * (bx2 - bx1) - (ax1 - bx1) * (by2 - by1)
+      num2 = (ay1 - by1) * (ax2 - ax1) - (ax1 - bx1) * (ay2 - ay1)
+
+      if num1 == 0 or num2 == 0 do
         false
       else
         r = num1 / den
         s = num2 / den
-        (r > 0 and r < 1) and (s > 0 and s < 1)
+        r > 0 and r < 1 and (s > 0 and s < 1)
       end
     end
   end
