@@ -15,6 +15,7 @@ defmodule Scurry.PolygonMap do
 
   alias Scurry.Polygon
   alias Scurry.Vector
+  use Scurry.Types
 
   @doc """
   Given a polygon map (main & holes), returns a list of vertices.
@@ -25,6 +26,7 @@ defmodule Scurry.PolygonMap do
   These are used when generating the walk map, since only the main's concave
   and the holes' convex ones limit where you can traverse in a 2d map.
   """
+  @spec get_vertices(polygon(), list(polygon())) :: list(vector())
   def get_vertices(polygon, holes) do
     {concave, _convex} = Polygon.classify_vertices(polygon)
 

@@ -314,7 +314,7 @@ defmodule Scurry.Vector do
   @doc """
   Calls round on a vector `v` to make the vector work with wx (requires integers).
 
-  The name ends in `_pos` to avoid any confusion/collision with `Kernel.found/1`.
+  The name ends in `_pos` to avoid any confusion/collision with `Kernel.round/1`.
 
   ## Params
 

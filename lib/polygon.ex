@@ -27,8 +27,8 @@ defmodule Scurry.Polygon do
   > ![Order of vertices](imgs/polygon.png)
   """
 
-  alias Scurry.Vector
   alias Scurry.Geo
+  use Scurry.Types
 
   @doc """
   Checks if a line intersects a polygon.
@@ -409,6 +409,7 @@ defmodule Scurry.Polygon do
 
   Returns the `{{x1, y1}, {x2, y2}}` segment that is closest to the point.
   """
+  @spec nearest_edge(polygon(), vector()) :: line()
   def nearest_edge(polygon, point) do
     # Get the closest segment of the polygon
     polygon
@@ -425,12 +426,12 @@ defmodule Scurry.Polygon do
   edge nearest the given `point`.
 
   ## Params
-  * `polygon`, a list of `{x, y}` vertices, `[{x1, y2}, {x2, y2}, ...]`. This
-    must be non-closed.
+  * `polygon`, a `t:polygon/0`..
   * `point` a tuple `{x, y}` describing a point
 
   Returns the `{x, y}` on an edge of the polygon that is nearest `point`.
   """
+  @spec nearest_point_on_edge(polygon(), vector()) :: vector()
   def nearest_point_on_edge(polygon, point) do
     # Get the closest segment of the polygon
     {{x1, y1}, {x2, y2}} = nearest_edge(polygon, point)
@@ -451,6 +452,12 @@ defmodule Scurry.Polygon do
   @doc """
   Check if the polygon is clockwise within screen coordinates.
 
+  ## Params
+  * `polygon` a `t:polygon/0` to check
+
+  Returns `true` if the points in the polygon are defined in a clockwise
+  orientation.
+
   ## Examples
       iex> Polygon.is_clockwise?([{0, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}])
       true
@@ -458,6 +465,7 @@ defmodule Scurry.Polygon do
       false
 
   """
+  @spec is_clockwise?(polygon()) :: boolean()
   def is_clockwise?(polygon) do
     a =
       polygon
