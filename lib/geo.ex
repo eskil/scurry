@@ -1,10 +1,10 @@
 defmodule Scurry.Geo do
   @moduledoc """
-  Functions related to lines relevant for 2D map pathfinding.
-
+  Geometry functions related to lines relevant for 2D map pathfinding.
   """
 
   alias Scurry.Vector
+  use Scurry.Types
 
   # For explanation of a lot of the math here;
   # * https://khorbushko.github.io/article/2021/07/15/the-area-polygon-or-how-to-detect-line-segments-intersection.html
@@ -13,16 +13,16 @@ defmodule Scurry.Geo do
   Determine if, where and how two lines intersect.
 
   ## Params
-  * `line1` a `{{x1, y1}, {x2, y2}}` line segment
-  * `line2` a `{{x3, y13, {x4, y4}}` line segment
+  * `line1` a line segment
+  * `line2` a line segment to check where and how it intersects with `line1`.
 
   ## Returns
-  * `:on_segment` one line is on the other.
-  * `:parallel` the lines are parallel and do not intersect.
-  * `{:point_intersection, {x, y}}` either line has an _endpoint_ (`{x, y}`) on
-    the other line.
-  * `{:intersection, {x, y}}` the lines intersect at `{x, y}`.
   * `:none` no intersection.
+  * `:parallel` the lines are parallel and _do not_ intersect.
+  * `:on_segment` one line is on the other.
+  * `{:point_intersection, vector}` either line has an _endpoint_ on the other
+    line. This means they just touch at the returned vector.
+  * `{:intersection, vector}` the lines intersect at the returned vector.
 
   ## Examples
       iex> Geo.line_segment_intersection({{1, 2}, {4, 2}}, {{2, 0}, {3, 0}})
@@ -36,6 +36,7 @@ defmodule Scurry.Geo do
       iex> Geo.line_segment_intersection({{1, 2}, {4, 2}}, {{2, 0}, {2, 3}})
       {:intersection, {2.0, 2.0}}
   """
+  @spec line_segment_intersection(line(), line()) :: :none | :parallel | :on_segment | {:point_intersection, vector()} | {:intersection, vector()}
   def line_segment_intersection(line1, line2) do
     {{ax1, ay1}, {ax2, ay2}} = line1
     {{bx1, by1}, {bx2, by2}} = line2
@@ -66,19 +67,21 @@ defmodule Scurry.Geo do
   end
 
   @doc """
-  Get the distance squared from a point to a line/segment.
+  Get the distance squared from `point` to `line`.
 
   ## Params
-  * `line` a tuple of points (`{{ax, ay}, {bx, by}}`) describing a line.
-  * `point` a tuple `{x, y}` describing a point
+  * `line` a `t:line/0`.
+  * `point` a `t:vector/0`
 
-  This returns the square of the distance beween the given point and segment as
-  a float.
+  ## Returns
+
+  The square of the distance beween the given `point` and `line`.
 
   ## Examples
       iex> Geo.distance_to_segment_squared({{2, 0}, {2, 2}}, {0, 1})
       4.0
   """
+  @spec distance_to_segment_squared(vector(), line()) :: float()
   def distance_to_segment_squared({{vx, vy} = v, {wx, wy} = w} = _line, {px, py} = point) do
     l2 = Vector.distance_squared(v, w)
 
@@ -100,35 +103,45 @@ defmodule Scurry.Geo do
   `distance_squared/2`.
 
   ## Params
-  * `line` a tuple of points (`{{ax, ay}, {bx, by}}`) describing a line.
-  * `point` a tuple `{x, y}` describing a point
+  * `line` a `t:line/0`.
+  * `point` a `t:vector/0`
 
-  This returns the distance beween the given point and segment as a float.
+  ## Returns
+
+  The distance beween the given `point` and `line`.
 
   ## Examples
       iex> Geo.distance_to_segment({{2, 0}, {2, 2}}, {0, 1})
       2.0
   """
+  @spec distance_to_segment(vector(), line()) :: float()
   def distance_to_segment(line, point) do
     :math.sqrt(distance_to_segment_squared(line, point))
   end
 
-  # ported from http://www.david-gouveia.com/portfolio/pathfinding-on-a-2d-polygonal-map/
   @doc """
   Check if two lines intersect
 
   This is a simpler version of `line_segment_intersection/2`, which is typically
   a better choice since it handles endpoints and segment overlap too.
 
+  This is kept/provided for historic purposes.
+
   ## Params
-  * `line1` a `{{x1, y1}, {x2, y2}}` line segment
-  * `line2` a `{{x3, y13, {x4, y4}}` line segment
+  * `line1`
+  * `line2`
 
-  Returns `true` if they intersect, `false` otherwise.
+  ## Returns
 
-  Note that this doesn't handle segment overlap or points touching. Use
+  `true` if they intersect, `false` otherwise.
+
+  ## Note
+
+  Tthis doesn't handle segment overlap or points touching. Use
   `line_segment_intersection/2` instead for that level of detail.
   """
+  # ported from http://www.david-gouveia.com/portfolio/pathfinding-on-a-2d-polygonal-map/
+  @spec do_lines_intersect?(line(), line()) :: boolean()
   def do_lines_intersect?({{ax1, ay1}, {ax2, ay2}} = _l1, {{bx1, by1}, {bx2, by2}} = _l2) do
     den = (ax2 - ax1) * (by2 - by1) - (ay2 - ay1) * (bx2 - bx1)
 
