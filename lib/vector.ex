@@ -9,8 +9,7 @@ defmodule Scurry.Vector do
   Wikipedia for further descriptions of the maths and use cases.
   """
 
-  @typedoc "A vector is represented as a tuple `{x, y}`, it's x and y components, both `t:number/0`."
-  @type vector() :: {x :: number(), y :: number()}
+  use Scurry.Types
 
   @doc """
   Get the length of a vector, aka magnitude.
@@ -292,7 +291,11 @@ defmodule Scurry.Vector do
   end
 
   @doc """
-  Calls trunc on a vector `v` to make the vector work with WxWidgets (requires integers).
+  Calls round on a vector to make a vector with `t:integer/0` instead of `t:float/0`.
+
+  This is for interoperability with other libraries where coordinates must be
+  expressed in integers, for example
+  [`:wx`](https://www.erlang.org/doc/man/wx.html).
 
   The name ends in `_pos` to avoid any confusion/collision with `Kernel.trunc/1`.
 
@@ -306,13 +309,17 @@ defmodule Scurry.Vector do
       iex> Vector.trunc_pos({10.1, 10.9})
       {10, 10}
   """
-  @spec trunc_pos(v :: vector()) :: vector()
+  @spec trunc_pos(v :: vector()) :: { integer(), integer() }
   def trunc_pos({x, y} = _v) do
     {Kernel.trunc(x), Kernel.trunc(y)}
   end
 
   @doc """
-  Calls round on a vector `v` to make the vector work with wx (requires integers).
+  Calls round on a vector to make a vector with `t:integer/0` instead of `t:float/0`.
+
+  This is for interoperability with other libraries where coordinates must be
+  expressed in integers, for example
+  [`:wx`](https://www.erlang.org/doc/man/wx.html).
 
   The name ends in `_pos` to avoid any confusion/collision with `Kernel.round/1`.
 
@@ -320,13 +327,13 @@ defmodule Scurry.Vector do
 
   * `v` a `t:vector/0` describing the vector.
 
-  Returns the vector with it's components converted to integers using `Kernel.round/1`.
+  Returns a vector with it's components converted to integers using `Kernel.round/1`.
 
   ## Examples
       iex> Vector.round_pos({10.1, 10.9})
       {10, 11}
   """
-  @spec round_pos(v :: vector()) :: vector()
+  @spec round_pos(v :: vector()) :: { integer(), integer() }
   def round_pos({x, y} = _v) do
     {Kernel.round(x), Kernel.round(y)}
   end

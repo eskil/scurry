@@ -18,8 +18,9 @@ defmodule Scurry.Polygon do
 
   > ### Order of vertices {: .warning}
   >
-  > They must be in clockwise order in screen coordinates, otherwise
-  > convex/concave classification will be inversed as it traverses the egdes.
+  > Polygons **must** be defined in clockwise order in screen coordinates. This is necessary
+  > for the convex/concave classification. It counter clock, it  will be inversed as it
+  > traverses the egdes.
   >
   > Here's a crude drawing of an example of the M shaped polygon used for many tests/docs.
   >
@@ -28,21 +29,74 @@ defmodule Scurry.Polygon do
   """
 
   alias Scurry.Geo
+  alias Scurry.Vector
   use Scurry.Types
 
   @doc """
   Checks if a line intersects a polygon.
 
-  This is a bare-minimum function, and for most cases using `intersections/2`
-  will be a better choice.
+  This is a boolean version of `intersects/2`. For most cases using
+  `intersections/3` will be a better choice to get intersections.
 
   ## Params
-  * `polygon` a list of points (`[{x, y}, {x, y}, ...]`) describing a polygon.
-  * `line` a tuple of points (`{{ax, ay}, {bx, by}}`) describing a line.
+  * `polygon` the`t:polygon/0` to check.
+  * `line` a `t:/line/0` to check if it intersects `polygon`.
 
-  Returns `true` or `false` wether the line intersects the polygon or not.
+  ## Returns
+
+  `true` or `false` wether the line intersects the polygon or not.
+
+  ## Examples
+      # A vaguely M shaped polygon
+      iex> Polygon.intersects?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], {{1, -0.5}, {1, 0.5}})
+      true
+      iex> Polygon.intersects?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], {{1, -1}, {1, 0}})
+      true
+      iex> Polygon.intersects?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], {{1, -2}, {1, -1}})
+      false
   """
+  @spec intersects?(polygon(), line()) :: boolean()
   def intersects?(polygon, line) do
+    case intersects(polygon, line) do
+      :nointersection -> false
+      _ -> true
+    end
+  end
+
+  @doc """
+  Checks if a line intersects a polygon.
+
+  Find an intersection (if any) between `polygon` and `line`. For most cases
+  using `intersections/3` will be a better choice to get intersections.
+
+  ## Params
+  * `polygon` the`t:polygon/0` to check.
+  * `line` a `t:/line/0` to check if it intersects `polygon`.
+
+  ## Returns
+
+  This relates to `Scurry.Geo.line_segment_intersection/2`.
+
+  - `:nointersection`, `line` does not intersect `polygon`
+  - `{:point_intersection, vector}`
+  - `{;intersection, line}`
+  - `:on_segment`
+
+  ## Examples
+      # A vaguely M shaped polygon
+      iex> Polygon.intersects([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], {{1, -0.5}, {1, 0.5}})
+      {:point_intersection, {1.0, 0.0}}
+      iex> Polygon.intersects([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], {{0.5, -0.5}, {0.5, 0.5}})
+      {:intersection, {0.5, 0.0}}
+      iex> Polygon.intersects([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], {{0.5, -1}, {0.5, 0}})
+      {:point_intersection, {0.5, 0.0}}
+      iex> Polygon.intersects([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], {{0.5, -2}, {0.5, -1}})
+      :nointersection
+      iex> Polygon.intersects([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], {{2, 0.1}, {2, 0.9}})
+      :on_segment
+  """
+  @spec intersects(polygon(), line()) :: :nointersection | :on_segment | {:intersection, vector()} | {:poiont_intersection, vector() }
+  def intersects(polygon, line) do
     prev_point = List.last(polygon)
     intersects_helper(polygon, line, prev_point)
   end
@@ -55,18 +109,22 @@ defmodule Scurry.Polygon do
   the list of intersection points.
 
   ## Params
-  * `polygon` a list of points (`[{x, y}, {x, y}, ...]`) describing a
-    polygon. This must be non-closed.
-  * `line` a tuple of points (`{{ax, ay}, {bx, by}}`) describing a line.
-  * `opts`
-    * `:allow_points` (default `false`) whether a `on_point` intersection
-      should be considered an intersection or not. This varies from use
-      cases. Eg. when building a polygon, points will be connected and thus
-      intersect if `true`. This may not be the desired result, so `false` won't
-      consider points intersections.
 
-  Returns a list of `{x, y}` tuples indicating where the line intersects, or
-  `[]` if there's no intersections.
+  * `polygon` a `t:polygon/0` to check for intersections with `line`.
+  * `line` a `t:line/0` to check for intersections against `polygon`.
+
+  ## Options
+
+  * `:allow_points` (default `false`) whether a `on_point` intersection
+  should be considered an intersection or not. This varies from use
+  cases. Eg. when building a polygon, points will be connected and thus
+  intersect if `true`. This may not be the desired result, so `false` won't
+  consider points intersections.
+
+  ## Returns
+
+  * a list of `t:vector/0` indicating where the line intersects
+  * `[]` if there's no intersections.
 
   ## Examples
       iex> polygon = [{0, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}]
@@ -78,6 +136,7 @@ defmodule Scurry.Polygon do
       iex> Polygon.intersections(polygon, line, allow_points: true)
       [{1.0, 0.0}, {1.0, 0.5}]
   """
+  @spec intersections(polygon(), line(), [allow_points: boolean()]) :: list(vector())
   def intersections(polygon, line, opts \\ []) do
     allow_points = Keyword.get(opts, :allow_points, false)
     prev_point = List.last(polygon)
@@ -93,19 +152,34 @@ defmodule Scurry.Polygon do
   end
 
   @doc """
-  Get first intersections of a line with a polygon.
+  Get first intersection of a line with a polygon.
 
   The "opposite" of `last_intersection/2`.
 
   ## Params
-  * `polygon` a list of points (`[{x, y}, {x, y}, ...]`) describing a polygon.
-  * `line` a tuple of points (`{{ax, ay}, {bx, by}}`) describing a line. The
-    first tuple (`{ax, ay}`) is considered the head of the line and "first" in
-    this context means nearest to that point.
 
-  Returns a `{x, y}` tuples indicating where the line first intersects, or `nil`
-  if there's no intersection.
+  * `polygon` a `t:polygon/0` to check for an intersection with `line`
+  * `line` a `t:line/0`. The first `t:vector/0` is considered the head of
+  the line and "first" in this context means nearest to that point.
+
+  ## Returns
+
+  * A `t:vector/0` indicating where `line` first intersects `polygon`.
+  * `nil` if there's no intersection.
+
+  ## Examples
+
+      # A square around 0,0
+      iex> square = [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      iex> Polygon.first_intersection(square, {{0, -2}, {0, 2}})
+      {0.0, -1.0}
+      iex> Polygon.first_intersection(square, {{0, 2}, {0, -2}})
+      {0.0, 1.0}
+      iex> Polygon.first_intersection(square, {{2, -2}, {2, 2}})
+      nil
   """
+  @spec first_intersection(polygon(), line()) :: nil | vector()
   def first_intersection(polygon, {a, _b} = line) do
     Enum.min_by(
       intersections(polygon, line),
@@ -119,19 +193,34 @@ defmodule Scurry.Polygon do
   end
 
   @doc """
-  Get last intersections of a line with a polygon.
+  Get last intersection of a line with a polygon.
 
   The "opposite" of `first_intersection/2`.
 
   ## Params
-  * `polygon` a list of points (`[{x, y}, {x, y}, ...]`) describing a polygon.
-  * `line` a tuple of points (`{{ax, ay}, {bx, by}}`) describing a line. The
-     second tuple (`{bx, by}`) is considered the end of the line and "last" in
-     this context means nearest to that point.
 
-  Returns a `{x, y}` tuples indicating where the line last intersects, or nil
-  if there's no intersection.
+  * `polygon` a `t:polygon/0` to check for an intersection with `line`
+  * `line` a `t:line/0`. The second `t:vector/0` is considered the tail of
+  the line and "last"  this context means nearest to that point.
+
+  ## Returns
+
+  * A `t:vector/0` indicating where `line` last intersects `polygon`
+  * `nil` if there's no intersection.
+
+  ## Examples
+
+      # A square around 0,0
+      iex> square = [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      iex> Polygon.last_intersection(square, {{0, -2}, {0, 2}})
+      {0.0, 1.0}
+      iex> Polygon.last_intersection(square, {{0, 2}, {0, -2}})
+      {0.0, -1.0}
+      iex> Polygon.last_intersection(square, {{2, -2}, {2, 2}})
+      nil
   """
+  @spec last_intersection(polygon(), line()) :: nil | vector()
   def last_intersection(polygon, {a, _b} = line) do
     Enum.max_by(
       intersections(polygon, line),
@@ -171,43 +260,66 @@ defmodule Scurry.Polygon do
   Split a polygon into concave and convex vertices.
 
   When doing pathfinding, there will typically be a outer polygon bounding the
-  "world" and multiple inner polygons describing "holes". The path can only be
-  within the outer polygon and has to "walk around" the holes.
+  "world" and multiple inner polygons describing "holes/obstacles".
 
-  Classifying the polygons into concave and convex gives the walkable graph.
+  The path can only be within the outer polygon and has to "walk around" the
+  holes.
 
-  * The outer polygon's concave (pointing into the world) vertices should be
+  Classifying the polygons into concave and convex is used to determine the
+  walkable graph.
+
+  * The outer polygon's concave (pointing into the world) vertices are used.
     used.
-  * The holes' convex (point out of the hole, into the world) vertices should
-    be used.
+  * The holes' convex (point out of the hole, into the world) vertices used used.
 
   In code, this looks like
 
   ```
+  # Get the concave vectices of the bounding polygon
   {concave, _convex} = Polygon.classify_vertices(world)
 
+  # Get al lthe convex vertices of all the holes
   convex = Enum.reduce(holes, [], fn points, acc ->
     {_, convex} = Polygon.classify_vertices(points)
     acc ++ convex
   end)
 
+  # The initial walk map is the combined set
   vertices = concave ++ convex
   ```
 
   ## Params
-  * `polygon`, a list of `{x, y}` tuples outlining a polygon. This must be non-closed.
 
-  Returns `{list of concave vertices, list of convex}`.
+  * `polygon`, a `t:polygon/0` to classify.
+
+  ## Returns
+
+  `{list of concave vertices, list of convex}`.
+
+  * A tuple of two lists of `t:vector/0`.
+  * The first list are all the _concave_ vertices or `[]` if none
+  * The second list are all the _convex_ vertices or `[]` if none
+
+  ## Note
 
   Three points that fall on the same line (`[{0, 0}, {1, 0}, {2, 0}]`) does not
-  match neither the concave/convex definition (angle gt/lt 180 degrees) this
-  will discard these via `classify_vertex/2`.
+  match neither the concave/convex definition (angle greater-than / less-than
+  180 degrees) this function will discard these via `classify_vertex/2`.
 
   ## Examples
       # A vaguely M shaped polygon
       iex> Polygon.classify_vertices([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}])
       {[{1, 0.5}], [{0, 0}, {2, 0}, {2, 1}, {0, 1}]}
+
+      # A square around 0,0
+      iex> Polygon.classify_vertices([{-1, -1}, {1, -1}, {1, 1}, {-1, 1}])
+      {[], [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]}
+
+      # A flat line
+      iex> Polygon.classify_vertices([{0, 0}, {1, 0}, {2, 0}])
+      {[], []}
   """
+  @spec classify_vertices(polygon()) :: {[vector()], [vector()]}
   def classify_vertices(polygon) do
     {concave, convex} =
       Enum.reduce(polygon, {0, []}, fn point, {idx, acc} ->
@@ -222,7 +334,7 @@ defmodule Scurry.Polygon do
   end
 
   @doc """
-  Check if a vertex is concave, convex or neither.
+  Check if a specific vertex is concave, convex or neither.
 
   Whehter a vertex is concave or convex is defined by it pointing out - it's
   inner angle is less than 180 means convex and more than 180 means concave.
@@ -231,25 +343,29 @@ defmodule Scurry.Polygon do
   on whether it's the boundary polygon or a hole polygon being tested.
 
   ## Params
-  * `polygon`, a list of `{x, y}` tuples outlining a polygon. This must be non-closed.
-  * `at`, a position within `polygon` to check.
+  * `polygon`, a `t:polygon/0`.
+  * `at`, which vector in the `polygon` to check.
 
-  Return
+  ## Returns
+
   * `:convex` for a convex vertice.
   * `:concave` for a concave vertice.
   * `:neither` for a vertice that's a straight edge, ie. 180 degrees.
 
   ## Examples
       # A vaguely M shaped polygon
-      iex> Polygon.classify_vertex([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 0)
+      iex> m = [{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}]
+      [{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}]
+      iex> Polygon.classify_vertex(m, 0)
       :convex
-      iex> Polygon.classify_vertex([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 1)
+      iex> Polygon.classify_vertex(m, 1)
       :neither
-      iex> Polygon.classify_vertex([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 4)
+      iex> Polygon.classify_vertex(m, 4)
       :concave
   """
-  # See https://www.david-gouveia.com/pathfinding-on-a-2d-polygonal-map
+  @spec classify_vertex(polygon(), integer()) :: :concave | :convex | :neither
   def classify_vertex(polygon, at) do
+    # See https://www.david-gouveia.com/pathfinding-on-a-2d-polygonal-map
     next = Enum.at(polygon, rem(at + 1, length(polygon)))
     current = Enum.at(polygon, at)
     prev = Enum.at(polygon, at - 1)
@@ -266,65 +382,73 @@ defmodule Scurry.Polygon do
   end
 
   @doc """
-  Check if a vertex is concave or not.
+  Check if a specific vertex in a polygon is concave
 
   ## Params
-  * `polygon`, a list of `{x, y}` tuples outlining a polygon. This must be non-closed.
-  * `at`, a position within `polygon` to check.
 
-  Return `true` or `false`.
+  * `polygon`, a `t:polygon/0`.
+  * `at`, which vector in the `polygon` to check.
 
-  Three points that fall on the same line (`[{0, 0}, {1, 0}, {2, 0}]`) does not
-  match neither the concave/convex definition (angle gt/lt 180 degrees). This
-  will return false for such a vertex.
+  ## Returns
+
+  `true` if the vertex is concave, otherwise `false`
+
+  See also `classify_vertex/2`.
 
   ## Examples
       # A vaguely M shaped polygon
-      iex> Polygon.is_concave?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 0)
+      iex> m = [{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}]
+      [{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}]
+      iex> Polygon.is_concave?(m, 0)
       false
-      iex> Polygon.is_concave?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 1)
+      iex> Polygon.is_concave?(m, 1)
       false
-      iex> Polygon.is_concave?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 2)
+      iex> Polygon.is_concave?(m, 2)
       false
-      iex> Polygon.is_concave?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 3)
+      iex> Polygon.is_concave?(m, 3)
       false
-      iex> Polygon.is_concave?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 4)
+      iex> Polygon.is_concave?(m, 4)
       true
-      iex> Polygon.is_concave?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 5)
+      iex> Polygon.is_concave?(m, 5)
       false
   """
+  @spec is_concave?(polygon(), number()) :: boolean()
   def is_concave?(polygon, at) do
     classify_vertex(polygon, at) == :concave
   end
 
   @doc """
-  Check if a vertex is convex or not.
+  Check if a specific vertex in a polygon is convex
 
   ## Params
-  * `polygon`, a list of `{x, y}` tuples outlining a polygon. This must be non-closed.
-  * `at`, a position within `polygon` to check.
 
-  Return `true` or `false`.
+  * `polygon`, a `t:polygon/0`.
+  * `at`, which vector in the `polygon` to check.
 
-  Three points that fall on the same line (`[{0, 0}, {1, 0}, {2, 0}]`) does not
-  match neither the concave/convex definition (angle gt/lt 180 degrees). This
-  will return false for such a vertex.
+  ## Returns
+
+  `true` if the vertex is convex, otherwise `false`
+
+  See also `classify_vertex/2`.
 
   ## Examples
       # A vaguely M shaped polygon
-      iex> Polygon.is_convex?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 0)
+      iex> m = [{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}]
+      [{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}]
+      iex> Polygon.is_convex?(m, 0)
       true
-      iex> Polygon.is_convex?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 1)
+      iex> Polygon.is_convex?(m, 1)
       false
-      iex> Polygon.is_convex?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 2)
+      iex> Polygon.is_convex?(m, 2)
       true
-      iex> Polygon.is_convex?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 3)
+      iex> Polygon.is_convex?(m, 3)
       true
-      iex> Polygon.is_convex?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 4)
+      iex> Polygon.is_convex?(m, 4)
       false
-      iex> Polygon.is_convex?([{0, 0}, {1, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}], 5)
+      iex> Polygon.is_convex?(m, 5)
       true
   """
+  @spec is_convex?(polygon(), number()) :: boolean()
   def is_convex?(polygon, at) do
     classify_vertex(polygon, at) == :convex
   end
@@ -332,7 +456,36 @@ defmodule Scurry.Polygon do
   # Alternate, https://sourceforge.net/p/polyclipping/code/HEAD/tree/trunk/cpp/clipper.cpp#l438
   @doc """
   Check if a point is inside a polygon or not.
+
+  ## Params
+  * `polygon`, a `t:polygon/0` to check
+  * `point`, a `t:vector/0` to check if is inside (or on) `polygon`.
+
+  ## Options
+
+  * `allow_border`, defaults to `true` and allows `point` to be the `polygon` edges.
+
+  ## Returns
+
+  * `true` is the `point` is inside the `polygon`
+  * `true` is the `point` is on `polygon` edges if `allow_border` is `true`.
+
+  ## Examples
+
+      # A square around 0,0
+      iex> square = [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      iex> Polygon.is_inside?(square, {0, 0})
+      true
+      iex> Polygon.is_inside?(square, {-1, 0})
+      true
+      iex> Polygon.is_inside?(square, {-1, 0}, [allow_border: false])
+      false
+      iex> Polygon.is_inside?(square, {-2, 0})
+      false
+
   """
+  @spec is_inside?(polygon(), vector(), [allow_border: boolean()]) :: boolean()
   def is_inside?(polygon, point, opts \\ [])
 
   def is_inside?(polygon, _point, _opts) when length(polygon) < 3 do
@@ -385,6 +538,8 @@ defmodule Scurry.Polygon do
 
   @doc """
   The opposite of `is_inside?/3`, provided for code readability.
+
+  See `is_inside?/3` for behaviour and imagine the opposite.
   """
   def is_outside?(polygon, point, opts \\ [])
 
@@ -397,17 +552,31 @@ defmodule Scurry.Polygon do
   end
 
   @doc """
-  Find the edge of a polygon nearest a given point
+  Find the edge of a polygon nearest a given point.
 
   Given a `point` that's inside or outside a given `polygon`, this checks each
   segment of the polygon, and returns the nearest one.
 
-  ## Params
-  * `polygon`, a list of `{x, y}` vertices, `[{x1, y2}, {x2, y2}, ...]`. This
-    must be non-closed.
-  * `point` a tuple `{x, y}` describing a point
+  If multiple lines are "nearest", the first in the polygon is picked.
 
-  Returns the `{{x1, y1}, {x2, y2}}` segment that is closest to the point.
+  ## Params
+  * `polygon`, a `t:polygon/0`
+  * `point` a `t:vector/0`
+
+  ## Returns
+
+  A `t:line/0` that is a segment of `polygon` that is closest to `point`.
+
+  ## Examples
+      # A square around 0,0
+      iex> square = [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      iex> Polygon.nearest_edge(square, {0, 0})
+      {{-1, -1}, {1, -1}}
+      iex> Polygon.nearest_edge(square, {0.9, 0})
+      {{1, -1}, {1, 1}}
+      iex> Polygon.nearest_edge(square, {1.1, 0})
+      {{1, -1}, {1, 1}}
   """
   @spec nearest_edge(polygon(), vector()) :: line()
   def nearest_edge(polygon, point) do
@@ -426,10 +595,23 @@ defmodule Scurry.Polygon do
   edge nearest the given `point`.
 
   ## Params
-  * `polygon`, a `t:polygon/0`..
-  * `point` a tuple `{x, y}` describing a point
+  * `polygon`, a `t:polygon/0` to check against.
+  * `point` a `t:vector/0` to check with
 
-  Returns the `{x, y}` on an edge of the polygon that is nearest `point`.
+  ## Returns
+
+  A `t:vector/0` that is a point on `polygon` that is closest to `point`.
+
+  ## Examples
+      # A square around 0,0
+      iex> square = [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      [{-1, -1}, {1, -1}, {1, 1}, {-1, 1}]
+      iex> Polygon.nearest_point_on_edge(square, {0, 0})
+      {0.0, -1.0}
+      iex> Polygon.nearest_point_on_edge(square, {0.9, 0})
+      {1.0, 0.0}
+      iex> Polygon.nearest_point_on_edge(square, {1.1, 0})
+      {1.0, 0.0}
   """
   @spec nearest_point_on_edge(polygon(), vector()) :: vector()
   def nearest_point_on_edge(polygon, point) do
@@ -452,11 +634,17 @@ defmodule Scurry.Polygon do
   @doc """
   Check if the polygon is clockwise within screen coordinates.
 
+  This is provided as a utility to check polygons eg. if loading them from data
+  files. The library internally _does not_ use this to validate polygons to
+  avoid a runtime penalty.
+
   ## Params
+
   * `polygon` a `t:polygon/0` to check
 
-  Returns `true` if the points in the polygon are defined in a clockwise
-  orientation.
+  ## Returrns
+
+  `true` if the points in the polygon are defined in a clockwise orientation.
 
   ## Examples
       iex> Polygon.is_clockwise?([{0, 0}, {2, 0}, {2, 1}, {1, 0.5}, {0, 1}])

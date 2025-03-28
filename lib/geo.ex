@@ -16,7 +16,7 @@ defmodule Scurry.Geo do
   * `line1` a `{{x1, y1}, {x2, y2}}` line segment
   * `line2` a `{{x3, y13, {x4, y4}}` line segment
 
-  Returns
+  ## Returns
   * `:on_segment` one line is on the other.
   * `:parallel` the lines are parallel and do not intersect.
   * `{:point_intersection, {x, y}}` either line has an _endpoint_ (`{x, y}`) on
