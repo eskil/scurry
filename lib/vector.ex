@@ -18,7 +18,9 @@ defmodule Scurry.Vector do
 
   * `v`, a `t:vector/0` describing the vector.
 
-  Returns the length of the vector `v`.
+  ## Returns
+
+  The length of the vector `v`.
 
   ## Examples
       iex> Vector.len({1, 1})
@@ -41,7 +43,9 @@ defmodule Scurry.Vector do
   * `v1` a `t:vector/0` describing the first vector.
   * `v2` a `t:vector/0` describing the second vector.
 
-  Returns the resulting vector of adding the two vectors together.
+  ## Returns
+
+  The resulting vector of adding `v1` and `v2` together.
 
   ## Examples
       iex> Vector.add({1, 2}, {3, 4})
@@ -60,7 +64,9 @@ defmodule Scurry.Vector do
   * `v1` a `t:vector/0` describing the first vector.
   * `v2` a `t:vector/0` describing the second vector.
 
-  Returns the result vector of subtracting of `v2` from `v1`.
+  ## Returns
+
+  The resulting vector of subtracting of `v2` from `v1`.
 
   ## Examples
       iex> Vector.sub({5, 7}, {1, 2})
@@ -79,7 +85,9 @@ defmodule Scurry.Vector do
   * `v` a `t:vector/0` describing the vector.
   * `c` the constant to divide by.
 
-  Returns the result of dividing `v` by `c`.
+  ## Returns
+
+  The result of dividing `v` by `c`.
 
   ## Examples
       iex> Vector.div({10, 14}, 2)
@@ -121,7 +129,9 @@ defmodule Scurry.Vector do
   * `v1` a `t:vector/0` describing the first vector.
   * `v2` a `t:vector/0` describing the second vector.
 
-  Returns the distance between the ends of `v1` and `v2`.
+  ## Returns
+
+  The distance between the ends of `v1` and `v2`.
 
   ## Examples
       iex> Vector.distance({0, 0}, {1, 1})
@@ -144,7 +154,9 @@ defmodule Scurry.Vector do
   * `v1` a `t:vector/0` describing the first vector.
   * `v2` a `t:vector/0` describing the second vector.
 
-  Returns the squared distance between the ends of `v1` and `v2`.
+  ## Returns
+
+  The squared distance between the ends of `v1` and `v2`.
 
   ## Examples
       iex> Vector.distance_squared({0, 0}, {1, 1})
@@ -167,7 +179,9 @@ defmodule Scurry.Vector do
 
   * `v` a `t:vector/0` describing the vector to normalise.
 
-  Returns a `t:vector/0` with length 1, and same x/y ratio.
+  ## Returns
+
+  A `t:vector/0` with length 1, and same x/y ratio.
 
   ## Examples
       iex> Vector.normalise({0, 1})
@@ -191,7 +205,9 @@ defmodule Scurry.Vector do
   * `v1` a `t:vector/0` describing the first vector.
   * `v2` a `t:vector/0` describing the second vector.
 
-  Returns the dot product of `v1` and `v2`.
+  ## Returns
+
+  The dot product of `v1` and `v2`.
 
   ## Examples
       iex> Vector.dot({1, 2}, {3, 4})
@@ -244,7 +260,9 @@ defmodule Scurry.Vector do
 
   * `v` a `t:vector/0` describing the vector to normalise.
 
-  Returns the angle in radians in relationship to the x-axis.
+  ## Returns
+
+  The angle in radians in relationship to the x-axis.
 
   ## Examples
       iex> Vector.angle({1, 1})
@@ -303,7 +321,9 @@ defmodule Scurry.Vector do
 
   * `v` a `t:vector/0` describing the vector.
 
-  Returns the vector with it's components converted to integers using `Kernel.trunc/1`.
+  ## Returns
+
+  The vector with it's components converted to integers using `Kernel.trunc/1`.
 
   ## Examples
       iex> Vector.trunc_pos({10.1, 10.9})
@@ -327,7 +347,9 @@ defmodule Scurry.Vector do
 
   * `v` a `t:vector/0` describing the vector.
 
-  Returns a vector with it's components converted to integers using `Kernel.round/1`.
+  ## Returns
+
+  Avector with it's components converted to integers using `Kernel.round/1`.
 
   ## Examples
       iex> Vector.round_pos({10.1, 10.9})
@@ -351,7 +373,9 @@ defmodule Scurry.Vector do
 
   * `v` a `t:vector/0` describing the vector.
 
-  Returns the vector in degrees relative to the x-axis.
+  ## Returns
+
+  The vector in degrees relative to the x-axis.
 
   ## Examples
       iex> Vector.degrees_graph({1, 1})
@@ -390,7 +414,9 @@ defmodule Scurry.Vector do
 
   * `v` a `t:vector/0` of coordinates describing the vector.
 
-  Returns the vector in degrees relative to the y-axis.
+  ## Returns
+
+  The vector in degrees relative to the y-axis.
 
   ## Examples
       iex> Vector.degrees({0, -1})

@@ -28,12 +28,27 @@ defmodule Scurry.Astar do
   state = Astar.search(graph, node_1, node_z, &heur_fun/2)
 
   # Extract path from the state
-  path = Astart.path(state)
+  path = Astar.path(state)
   [node1, ..., node_z]
   ```
   """
 
   require Logger
+
+  @typedoc "The cost of a traversel between two nodes is a numeric value"
+  @type cost :: number()
+
+  @typedoc "A graph node (spelled `gnode` since `node` is reserved) is any type that can be used as a key in a `t:map/0` For instance a `t:vector/0`."
+  @type gnode :: any()
+
+  @typedoc "A graph is a `t:map/0` from `t:gnode/0` to another `t:gnode/0` and the traversal `t:cost/0`"
+  @type graph :: %{gnode() => {gnode(), cost()}}
+
+  @typedoc "Function that given two `t:gnode/0` graph nodes, computes the cost. Eg. a euclidian 2D vector function like `Scurry.Vector.distance/2`"
+  @type cost_fun :: (gnode(), gnode() -> cost())
+
+  @typedoc "The internal state of the A-star algorithm. Use `path/1` to extract the result."
+  @opaque state :: map()
 
   @doc """
   Find shortest path in `graph` from `start` to `stop`.
@@ -47,9 +62,12 @@ defmodule Scurry.Astar do
     `graph` to `stop`. It takes two nodes and returns a cost that should be
     comparable with itself for ordering. `node, node :: term`.
 
-  Returns the algorithms internal state which can be passed to `path/1` to
+  ## Returns
+
+  The algorithms internal state which can be passed to `path/1` to
   obtain the actual path.
   """
+  @spec search(graph(), gnode(), gnode(), cost_fun()) :: state()
   def search(graph, start, stop, heur_fun) do
     # Logger.info("----------------------------------------- A-star")
     # Logger.info("graph = #{inspect graph, pretty: true}")
@@ -166,9 +184,13 @@ defmodule Scurry.Astar do
 
   * `state` the a-star state returned by `search/4`
 
-  Returns the path as a list of node terms. The type of the node term is dictated
-  by the key's type in the graph.
+  ## Returns
+
+  The path as a list of nodes. The type of the node is the same as in the
+  `t:graph/0` used in the call to `search/4`.
+
   """
+  @spec path(state()) :: list(gnode())
   def path(state) do
     next = state.shortest_path_tree[state.stop]
 
