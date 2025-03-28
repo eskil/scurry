@@ -34,18 +34,7 @@ defmodule Scurry.Astar do
   """
 
   require Logger
-
-  @typedoc "The cost of a traversel between two nodes is a numeric value"
-  @type cost :: number()
-
-  @typedoc "A graph node (spelled `gnode` since `node` is reserved) is any type that can be used as a key in a `t:map/0` For instance a `t:vector/0`."
-  @type gnode :: any()
-
-  @typedoc "A graph is a `t:map/0` from `t:gnode/0` to another `t:gnode/0` and the traversal `t:cost/0`"
-  @type graph :: %{gnode() => {gnode(), cost()}}
-
-  @typedoc "Function that given two `t:gnode/0` graph nodes, computes the cost. Eg. a euclidian 2D vector function like `Scurry.Vector.distance/2`"
-  @type cost_fun :: (gnode(), gnode() -> cost())
+  use Scurry.Astar.Types
 
   @typedoc "The internal state of the A-star algorithm. Use `path/1` to extract the result."
   @opaque state :: map()

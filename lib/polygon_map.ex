@@ -16,6 +16,7 @@ defmodule Scurry.PolygonMap do
   alias Scurry.Polygon
   alias Scurry.Vector
   use Scurry.Types
+  use Scurry.Astar.Types
 
   @doc """
   Given a polygon map (`world` & `holes`), returns a list of vertices for a
@@ -28,11 +29,12 @@ defmodule Scurry.PolygonMap do
 
   ## Returns
 
-  The vertices that are the `worlds`'s concave vertices and the convex ones of
-  the `holes`.
+  The walkmap, a list of vertices that are the `worlds`'s concave vertices and
+  the convex ones of the `holes`.
 
   These are used when generating the walk map, since only the `world`'s concave
-  and the `holes`' convex ones limit where you can traverse in a 2D map.
+  and the `holes`' convex ones limit where you can traverse in a 2D map. Any
+  path has to walk around the holes' convex points and the world's concave.
 
   See [Quickstart](quickstart.html) for a concrete example.
   """
@@ -50,18 +52,28 @@ defmodule Scurry.PolygonMap do
   end
 
   @doc """
-  Given a polygon map (main & holes) and list of vertices, makes the graph.
+  Given a polygon map (`world` & `holes`) and list of vertices, makes the walk
+  graph for a A-star search.
 
   ## Params
-  * `cost_fun`, a `node, node :: cost` function, defaults to `Scurry.Vector.distance/2`
+  * `world`, a `t:polygon/0` that defines the outer boundary
+  * `holes`, a list of `t:polygon/0`s that define holes/obstacles inside `world`.
+  * `vertices`, the result of `get_vertices/2`.
+  * `cost_fun`, a `t:cost_fun/0` function, defaults to `Scurry.Vector.distance/2`
+
+  ## Returns
+
+  A map of all node to node
 
   ## Todo
 
-  This should ideally take `line_of_sight` as a function so users can
+  This should ideally take `line_of_sight/3` as a function so users can
   customise which vertices can reach each other. But for now, users can make
   the graph themselves just as easily.
+
+  See [Quickstart](quickstart.html) for a concrete example.
   """
-  @spec create_graph(polygon(), list(polygon()), list(vector()), (vector(), vector() -> float())) :: %{vector() => {vector(), float()}}
+  @spec create_graph(polygon(), list(polygon()), list(vector()), cost_fun()) :: graph()
   def create_graph(world, holes, vertices, cost_fun \\ nil)
 
   def create_graph(world, holes, vertices, nil) do
@@ -294,8 +306,8 @@ defmodule Scurry.PolygonMap do
   end
 
   # Get all edges from points_a and point_b for which there's line-of-sight.
-  defp get_edges(polygon, holes, points_a, points_b, cost_fun) do
-    is_reachable? = fn a, b -> is_line_of_sight?(polygon, holes, {a, b}) end
+  defp get_edges(world, holes, points_a, points_b, cost_fun) do
+    is_reachable? = fn a, b -> is_line_of_sight?(world, holes, {a, b}) end
 
     # O(n^2) check all vertice combos for reachability...
     {_, all_edges} =
