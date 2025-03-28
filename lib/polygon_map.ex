@@ -18,17 +18,27 @@ defmodule Scurry.PolygonMap do
   use Scurry.Types
 
   @doc """
-  Given a polygon map (main & holes), returns a list of vertices.
+  Given a polygon map (`world` & `holes`), returns a list of vertices for a
+  walkmap for A-star search
 
-  The vertices are the main polygon's concave vertices and the convex ones of
-  the holes.
 
-  These are used when generating the walk map, since only the main's concave
-  and the holes' convex ones limit where you can traverse in a 2d map.
+  ## Params
+  * `world`, a polygon that defines the outer boundary
+  * `holes`, a list of polygons that define holes/obstacles inside `world`.
+
+  ## Returns
+
+  The vertices that are the `worlds`'s concave vertices and the convex ones of
+  the `holes`.
+
+  These are used when generating the walk map, since only the `world`'s concave
+  and the `holes`' convex ones limit where you can traverse in a 2D map.
+
+  See [Quickstart](quickstart.html) for a concrete example.
   """
   @spec get_vertices(polygon(), list(polygon())) :: list(vector())
-  def get_vertices(polygon, holes) do
-    {concave, _convex} = Polygon.classify_vertices(polygon)
+  def get_vertices(world, holes) do
+    {concave, _convex} = Polygon.classify_vertices(world)
 
     convex =
       Enum.reduce(holes, [], fn points, acc ->
@@ -43,20 +53,23 @@ defmodule Scurry.PolygonMap do
   Given a polygon map (main & holes) and list of vertices, makes the graph.
 
   ## Params
-  * `cost_fun`, a `node, node :: cost` function, defaults to `Vector.distance`
+  * `cost_fun`, a `node, node :: cost` function, defaults to `Scurry.Vector.distance/2`
 
-  TODO: this should ideally take `line_of_sight` as a function so users can
+  ## Todo
+
+  This should ideally take `line_of_sight` as a function so users can
   customise which vertices can reach each other. But for now, users can make
   the graph themselves just as easily.
   """
-  def create_graph(polygon, holes, vertices, cost_fun \\ nil)
+  @spec create_graph(polygon(), list(polygon()), list(vector()), (vector(), vector() -> float())) :: %{vector() => {vector(), float()}}
+  def create_graph(world, holes, vertices, cost_fun \\ nil)
 
-  def create_graph(polygon, holes, vertices, nil) do
-    create_graph(polygon, holes, vertices, &Vector.distance/2)
+  def create_graph(world, holes, vertices, nil) do
+    create_graph(world, holes, vertices, &Vector.distance/2)
   end
 
-  def create_graph(polygon, holes, vertices, cost_fun) do
-    get_edges(polygon, holes, vertices, vertices, cost_fun)
+  def create_graph(world, holes, vertices, cost_fun) do
+    get_edges(world, holes, vertices, vertices, cost_fun)
   end
 
   @doc """
