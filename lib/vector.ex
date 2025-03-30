@@ -16,7 +16,7 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v`, a `t:vector/0` describing the vector.
+  * `v` (`t:vector/0`) the vector to find the length for.
 
   ## Returns
 
@@ -40,8 +40,8 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a `t:vector/0` describing the first vector.
-  * `v2` a `t:vector/0` describing the second vector.
+  * `v1` (`t:vector/0`) the first vector.
+  * `v2` (`t:vector/0`) the second vector to add to `v1`.
 
   ## Returns
 
@@ -61,8 +61,8 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a `t:vector/0` describing the first vector.
-  * `v2` a `t:vector/0` describing the second vector.
+  * `v1` (`t:vector/0`) the first vector.
+  * `v2` (`t:vector/0`) the second vector to subtract from `v1`.
 
   ## Returns
 
@@ -80,10 +80,12 @@ defmodule Scurry.Vector do
   @doc """
   Divide a vector by a constant.
 
+  Dividing/multiplying a vector essentially shortens/lengthens it.
+
   ## Params
 
-  * `v` a `t:vector/0` describing the vector.
-  * `c` the constant to divide by.
+  * `v` (`t:vector/0`) the vector to divide.
+  * `c` (`t:number/0`) the constant to divide `v` by.
 
   ## Returns
 
@@ -103,8 +105,8 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v` a `t:vector/0` describing the vector.
-  * `c` the constant to multiple by.
+  * `v` (`t:vector/0`) describing the vector.
+  * `c` (`t:number/0` the constant to multiply `v` by.
 
   Returns the result of multiplying `v` by `c`.
 
@@ -126,8 +128,8 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a `t:vector/0` describing the first vector.
-  * `v2` a `t:vector/0` describing the second vector.
+  * `v1` (`t:vector/0`) describing the first vector.
+  * `v2` (`t:vector/0`) describing the second vector to get the distance from `v1`.
 
   ## Returns
 
@@ -151,8 +153,8 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a `t:vector/0` describing the first vector.
-  * `v2` a `t:vector/0` describing the second vector.
+  * `v1` (`t:vector/0`) describing the first vector.
+  * `v2` (`t:vector/0`) describing the second vector to get the distance squared from `v1`.
 
   ## Returns
 
@@ -177,7 +179,7 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v` a `t:vector/0` describing the vector to normalise.
+  * `v` (`t:vector/0`) describing the vector to normalise.
 
   ## Returns
 
@@ -202,12 +204,12 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a `t:vector/0` describing the first vector.
-  * `v2` a `t:vector/0` describing the second vector.
+  * `v1` (`t:vector/0`) describing the first vector.
+  * `v2` (`t:vector/0`) describing the second vector to 'dot' against `v1`.
 
   ## Returns
 
-  The dot product of `v1` and `v2`.
+  The dot product of `v1` and `v2`, `v1` · `v2`.
 
   ## Examples
       iex> Vector.dot({1, 2}, {3, 4})
@@ -223,10 +225,10 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v1` a `t:vector/0` describing the first vector.
-  * `v2` a `t:vector/0` describing the second vector.
+  * `v1` (`t:vector/0`) describing the first vector.
+  * `v2` (`t:vector/0`) describing the second vector to 'cross' against `v2`.
 
-  Returns the cross product of `v1` and `v2`.
+  Returns the cross product of `v1` and `v2`, `v1` × `v2`.
 
   ## Examples
       iex> Vector.cross({1, 2}, {3, 4})
@@ -258,7 +260,7 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v` a `t:vector/0` describing the vector to normalise.
+  * `v` (`t:vector/0`) describing the vector to obtain the angle for.
 
   ## Returns
 
@@ -311,15 +313,17 @@ defmodule Scurry.Vector do
   @doc """
   Calls round on a vector to make a vector with `t:integer/0` instead of `t:float/0`.
 
-  This is for interoperability with other libraries where coordinates must be
-  expressed in integers, for example
-  [`:wx`](https://www.erlang.org/doc/man/wx.html).
+  This is provided for interoperability with other libraries where coordinates
+  must be expressed in integers, for example
+  [`:wx`](https://www.erlang.org/doc/man/wx.html) operations for drawing.
 
-  The name ends in `_pos` to avoid any confusion/collision with `Kernel.trunc/1`.
+  The name ends in `_pos` to avoid any confusion/collision with
+  `Kernel.trunc/1` and to indicate the use in drawing "positions" on the
+  screen.
 
   ## Params
 
-  * `v` a `t:vector/0` describing the vector.
+  * `v` (`t:vector/0`) describing the vector to round to integers.
 
   ## Returns
 
@@ -339,13 +343,15 @@ defmodule Scurry.Vector do
 
   This is for interoperability with other libraries where coordinates must be
   expressed in integers, for example
-  [`:wx`](https://www.erlang.org/doc/man/wx.html).
+  [`:wx`](https://www.erlang.org/doc/man/wx.html) operations for drawing.
 
-  The name ends in `_pos` to avoid any confusion/collision with `Kernel.round/1`.
+  The name ends in `_pos` to avoid any confusion/collision with
+  `Kernel.round/1` and to indicate the use in drawing "positions" on the
+  screen.
 
   ## Params
 
-  * `v` a `t:vector/0` describing the vector.
+  * `v` (`t:vector/0`) describing the vector to round to integers.
 
   ## Returns
 
@@ -371,7 +377,7 @@ defmodule Scurry.Vector do
 
   ## Params
 
-  * `v` a `t:vector/0` describing the vector.
+  * `v` (`t:vector/0`) describing the vector to obtain the angle for.
 
   ## Returns
 
@@ -410,9 +416,12 @@ defmodule Scurry.Vector do
   Vectors are in `(x,y)` screen coordinate, so `(1,1)` = 135 degrees (down to the
   right/ south-east) from `0,0`, the top left corner is `0,0`.
 
+  This layout maps how eg. [`:wx`](https://www.erlang.org/doc/man/wx.html)
+  defines the coordinates.
+
   ## Params
 
-  * `v` a `t:vector/0` of coordinates describing the vector.
+  * `v` (`t:vector/0`) of coordinates describing the vector to obtain the angle for.
 
   ## Returns
 

@@ -39,6 +39,7 @@ defmodule Scurry.Polygon do
   `intersections/3` will be a better choice to get intersections.
 
   ## Params
+
   * `polygon` (`t:polygon/0`), the polygon to check.
   * `line` (`t:line/0`), the line to check if it intersects `polygon`.
 
@@ -70,6 +71,7 @@ defmodule Scurry.Polygon do
   using `intersections/3` will be a better choice to get intersections.
 
   ## Params
+
   * `polygon` (`t:polygon/0`), the polygon to check.
   * `line` (`t:line/0`), the line to check if it intersects `polygon`.
 
@@ -158,7 +160,7 @@ defmodule Scurry.Polygon do
 
   ## Params
 
-  * `polygon` (`t:polygon/0`) a polygon to check for an intersection with `line`
+  * `polygon` (`t:polygon/0`) a polygon to check for an intersection with `line`.
   * `line` (`t:line/0`). The line to check for intersections with `polygon`.
 
   A `t:line/0` is a tuple of two `t:vector/0` and the first is considered the head
@@ -201,7 +203,7 @@ defmodule Scurry.Polygon do
 
   ## Params
 
-  * `polygon` (`t:polygon/0`) a polygon to check for an intersection with `line`
+  * `polygon` (`t:polygon/0`) a polygon to check for an intersection with `line`.
   * `line` (`t:line/0`). The line to check for intersections with `polygon`.
 
   A `t:line/0` is a tuple of two `t:vector/0` and the last is considered the tail
@@ -463,6 +465,7 @@ defmodule Scurry.Polygon do
   Check if a point is inside a polygon or not.
 
   ## Params
+
   * `polygon` (`t:polygon/0`) the polygon to check against.
   * `point` (`t:vector/0`) the point to check if is inside (or on) `polygon`.
 
@@ -565,7 +568,8 @@ defmodule Scurry.Polygon do
   If multiple lines are "nearest", the first in the polygon is picked.
 
   ## Params
-  * `polygon` (`t:polygon/0`) the polygion to find the nearest edge on
+
+  * `polygon` (`t:polygon/0`) the polygion to find the nearest edge on.
   * `point` (`t:vector/0`) the point to find the nearest edge to.
 
   ## Returns
@@ -600,7 +604,8 @@ defmodule Scurry.Polygon do
   edge nearest the given `point`.
 
   ## Params
-  * `polygon` (`t:polygon/0`) the polygion to find the nearest point on
+
+  * `polygon` (`t:polygon/0`) the polygion to find the nearest point on.
   * `point` (`t:vector/0`) the point to find the nearest point to.
 
   ## Returns
@@ -645,7 +650,7 @@ defmodule Scurry.Polygon do
 
   ## Params
 
-  * `polygon` (`t:polygon/0`) the polygon to check to check
+  * `polygon` (`t:polygon/0`) the polygon to check to check.
 
   ## Returrns
 
