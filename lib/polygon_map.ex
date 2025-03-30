@@ -24,8 +24,9 @@ defmodule Scurry.PolygonMap do
 
 
   ## Params
-  * `world`, a polygon that defines the outer boundary
-  * `holes`, a list of polygons that define holes/obstacles inside `world`.
+
+  * `world` (`t:polygon/0`), the polygon that defines the outer boundary.
+  * `holes` (`t:list/0`), a list of `t:polygon/0` that define holes/obstacles inside `world`.
 
   ## Returns
 
@@ -56,10 +57,15 @@ defmodule Scurry.PolygonMap do
   graph for a A-star search.
 
   ## Params
-  * `world`, a `t:polygon/0` that defines the outer boundary
-  * `holes`, a list of `t:polygon/0`s that define holes/obstacles inside `world`.
-  * `vertices`, the result of `get_vertices/2`.
-  * `cost_fun`, a `t:cost_fun/0` function, defaults to `Scurry.Vector.distance/2`
+
+  * `world` (`t:polygon/0`) the polygon that defines the outer boundary.
+  * `holes` (`t:list/0`), a list of `t:polygon/0` that define holes/obstacles inside `world`.
+  * `vertices` (`t:list/0`), the result of `get_vertices/2`.
+  * `cost_fun` (`t:cost_fun/0`) a "cost" function.
+
+  The `cost_fun` is a function that indicates the of traversing between to
+  points. It defaults to `Scurry.Vector.distance/2`, which is suitable for
+  basic 2D map walking.
 
   ## Returns
 
@@ -85,37 +91,52 @@ defmodule Scurry.PolygonMap do
   end
 
   @doc """
-  Given a polygon map (main & holes), list of vertices and the initial graph,
-  extend the graph with extra `points`.
+  Given a polygon map (main & holes), list of vertices and the initial graph
+  from `create_graph/4`, extend the graph with extra `points`.
 
-  This is used to "temporarily" expand the fixed walk graph with the start and
-  end-point. This is a performance optimisation that saves work by reusing the
-  fixed nodes and extend it with the moveable points.
+  This is used to "temporarily" expand the created walk graph with a start and
+  end-point. This is a minor performance optimisation that saves work by
+  reusing the fixed nodes and extend it with the moveable points.
 
   ## Params
-  * `polygons`, a `%{main: [...], hole: [...], hole2: [...]}` polygon map.
-  * `graph`, the fixed graph, eg. created via `create_graph/2`.
-  * `vertices` the nodes used to create `graph`.
-  * `points` a list of coordinates, `[{x, y}, {x, y}...]`, to extend with
-  * `cost_fun`, a `node, node :: cost` function, defaults to `Vector.distance`
 
-  Returns an extended graph plus the combined list of vertices and new points,
-  `{new_graph, new_vertices}`.
+  * `graph` (`t:graph/0`) the walk graph, as created by `create_graph/4`. This is used to return a new graph that's extended with `points`.
+  * `world` (`t:polygon/0`) the polygon that defines the outer boundary.
+  * `holes` (`t:list/0`), a list of `t:polygon/0` that define holes/obstacles inside `world`.
+  * `vertices` (`t:list/0`) the list of vertices returned by `get_vertices/4`
+    and used for `create_graph/4` to get `graph`.
+  * `points` (`t:list/0`) a list of vectors (`t:vector/0`), `[{x, y}, {x, y}...]`, to extend with. Eg. a stop
+  * `cost_fun` (`t:cost_fun/0`) a "cost" function.
+
+  `world` and `holes` need to be passed in in addition to `graph`, so the
+  function can determine line-of-sights between the existing graph and new
+  points from `points`.
+
+  The `cost_fun` is a function that indicates the of traversing between to
+  points. It defaults to `Scurry.Vector.distance/2`, which is suitable for
+  basic 2D map walking.
+
+  ## Returns
+
+  A tuple with the extended graph plus the combined list of vertices and new
+  points, `{new_graph, new_vertices}`. The `new_graph` is intended to be used
+  in calls to `Astar.search/4`, and `new_vertices` is solely provided as
+  informational, eg. for displaying the graphs visually.
   """
-  def extend_graph(graph, polygon, holes, vertices, points, cost_fun \\ nil)
+  def extend_graph(graph, world, holes, vertices, points, cost_fun \\ nil)
 
-  def extend_graph(graph, polygon, holes, vertices, points, nil) do
-    extend_graph(graph, polygon, holes, vertices, points, &Vector.distance/2)
+  def extend_graph(graph, world, holes, vertices, points, nil) do
+    extend_graph(graph, world, holes, vertices, points, &Vector.distance/2)
   end
 
-  def extend_graph(graph, polygon, holes, vertices, points, cost_fun) do
+  def extend_graph(graph, world, holes, vertices, points, cost_fun) do
     # To extend the graph `graph` made up up `vertices` with new points
     # `points`, we need to find three sets of edges (sub-graphs). The ones from
     # the new points to the existing vertices, vice-versa, and between the new
     # points.
-    set_a = get_edges(polygon, holes, points, vertices, cost_fun)
-    set_b = get_edges(polygon, holes, vertices, points, cost_fun)
-    set_c = get_edges(polygon, holes, points, points, cost_fun)
+    set_a = get_edges(world, holes, points, vertices, cost_fun)
+    set_b = get_edges(world, holes, vertices, points, cost_fun)
+    set_c = get_edges(world, holes, points, points, cost_fun)
 
     # Merge the three new sub-graphs into graph. This uses Map.merge with a
     # merge func that combines values for identical keys to extend them instead
@@ -137,6 +158,7 @@ defmodule Scurry.PolygonMap do
   Find the nearest point on the line that is inside the map and outside a hole.
 
   ## Params
+
   * `polygon`, a list of `{x, y}` vertices. This is the main boundary map.
   * `holes`, a list of lists of `{x, y}` vertices. These are holes within
     `polygon`.
