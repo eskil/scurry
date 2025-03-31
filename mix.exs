@@ -8,7 +8,7 @@ defmodule Scurry.MixProject do
       package: package(),
       aliases: aliases(),
       app: :scurry,
-      version: "2.0.1",
+      version: "3.0.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),

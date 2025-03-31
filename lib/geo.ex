@@ -152,7 +152,7 @@ defmodule Scurry.Geo do
   """
   # ported from http://www.david-gouveia.com/portfolio/pathfinding-on-a-2d-polygonal-map/
   @spec do_lines_intersect?(line(), line()) :: boolean()
-  def do_lines_intersect?({{ax1, ay1}, {ax2, ay2}} = _l1, {{bx1, by1}, {bx2, by2}} = _l2) do
+  def do_lines_intersect?({{ax1, ay1}, {ax2, ay2}} = _line1, {{bx1, by1}, {bx2, by2}} = _line2) do
     den = (ax2 - ax1) * (by2 - by1) - (ay2 - ay1) * (bx2 - bx1)
 
     if den == 0 do
