@@ -15,57 +15,69 @@ defmodule Scurr.PolygonMapTest do
   test "nearest_point no change needed" do
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 7}, {7, 7}, {7, 5}, {5, 5}],
-      [{15, 7}, {17, 7}, {17, 5}, {15, 5}],
+      [{15, 7}, {17, 7}, {17, 5}, {15, 5}]
     ]
+
     assert PolygonMap.nearest_point(polygon, holes, {2, 1}) == {2, 1}
   end
 
   test "nearest_point stop outside boundary" do
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 7}, {7, 7}, {7, 5}, {5, 5}],
-      [{15, 7}, {17, 7}, {17, 5}, {15, 5}],
+      [{15, 7}, {17, 7}, {17, 5}, {15, 5}]
     ]
+
     assert PolygonMap.nearest_point(polygon, holes, {-1, 1}) == {0, 1}
   end
 
   test "nearest_point stop in hole" do
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 7}, {7, 7}, {7, 5}, {5, 5}],
-      [{15, 7}, {17, 7}, {17, 5}, {15, 5}],
+      [{15, 7}, {17, 7}, {17, 5}, {15, 5}]
     ]
+
     assert PolygonMap.nearest_point(polygon, holes, {5.5, 6}) == {5, 6}
   end
 
   test "nearest_point stop in hole round" do
     # M shape
     polygon = [{0, 0}, {100, 0}, {200, 0}, {200, 200}, {100, 100}, {0, 200}]
+
     holes = [
-      [{50, 70}, {70, 70}, {70, 50}],
+      [{50, 70}, {70, 70}, {70, 50}]
     ]
+
     assert PolygonMap.nearest_point(polygon, holes, {69.8, 69.1}) == {70, 69}
   end
 
   test "nearest_point stop in hole ceil-ceil" do
     # M shape
     polygon = [{0, 0}, {100, 0}, {200, 0}, {200, 200}, {100, 100}, {0, 200}]
+
     holes = [
-      [{50, 70}, {69, 80}, {70, 50}],
+      [{50, 70}, {69, 80}, {70, 50}]
     ]
+
     assert PolygonMap.nearest_point(polygon, holes, {68.4, 69.4}) == {70, 70}
   end
 
   test "nearest_point stop in hole ceil-floor" do
-   # M shape
+    # M shape
     polygon = [{0, 0}, {100, 0}, {200, 0}, {200, 200}, {100, 100}, {0, 200}]
+
     holes = [
-      [{50, 70}, {70, 80}, {70, 50}],
+      [{50, 70}, {70, 80}, {70, 50}]
     ]
+
     assert PolygonMap.nearest_point(polygon, holes, {64, 59}) == {63, 57}
   end
 
@@ -77,10 +89,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{10, 30}, {20, 30}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == false
   end
 
@@ -88,10 +102,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{8, 2}, {12, 2}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == true
   end
 
@@ -99,10 +115,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{18, 2}, {22, 2}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == false
   end
 
@@ -110,10 +128,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{22, 2}, {18, 2}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == false
   end
 
@@ -121,10 +141,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{10, 6}, {12, 6}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == true
   end
 
@@ -132,10 +154,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{6, 6}, {12, 6}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == false
   end
 
@@ -143,10 +167,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{3, 6}, {12, 6}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == false
   end
 
@@ -154,10 +180,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{4, 4}, {8, 8}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == false
   end
 
@@ -165,10 +193,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{4, 6}, {5, 6}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == true
   end
 
@@ -176,10 +206,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{4, 8}, {5, 7}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == true
   end
 
@@ -187,10 +219,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{5, 5}, {7, 7}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == false
   end
 
@@ -198,10 +232,12 @@ defmodule Scurr.PolygonMapTest do
     line = {{0, 20}, {20, 20}}
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
+
     holes = [
       [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
-      [{15, 5}, {17, 5}, {17, 7}, {15, 7}],
+      [{15, 5}, {17, 5}, {17, 7}, {15, 7}]
     ]
+
     assert PolygonMap.is_line_of_sight?(polygon, holes, line) == false
   end
 
@@ -215,9 +251,18 @@ defmodule Scurr.PolygonMapTest do
     # Two holes with concave point each
     holes = [
       [{5, 5}, {5.1, 6.9}, {7, 7}, {5, 7}],
-      [{15, 5}, {15.1, 6.9}, {17, 7}, {15, 7}],
+      [{15, 5}, {15.1, 6.9}, {17, 7}, {15, 7}]
     ]
-    assert PolygonMap.get_vertices(polygon, holes) == [{10, 10}, {5, 5}, {7, 7}, {5, 7}, {15, 5}, {17, 7}, {15, 7}]
+
+    assert PolygonMap.get_vertices(polygon, holes) == [
+             {10, 10},
+             {5, 5},
+             {7, 7},
+             {5, 7},
+             {15, 5},
+             {17, 7},
+             {15, 7}
+           ]
   end
 
   ###
@@ -229,8 +274,9 @@ defmodule Scurr.PolygonMapTest do
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
     # Two holes with concave point each
     holes = [
-      [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
+      [{5, 5}, {7, 5}, {7, 7}, {5, 7}]
     ]
+
     vertices = PolygonMap.get_vertices(polygon, holes)
     graph = PolygonMap.create_graph(polygon, holes, vertices)
 
@@ -245,8 +291,9 @@ defmodule Scurr.PolygonMapTest do
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
     # Two holes with concave point each
     holes = [
-      [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
+      [{5, 5}, {7, 5}, {7, 7}, {5, 7}]
     ]
+
     # Eg. edge {1,2} -> {3, 4} = 1+2+3+4 = 10
     cost_fun = fn {x1, y1}, {x2, y2} -> x1 + y1 + x2 + y2 end
     vertices = PolygonMap.get_vertices(polygon, holes)
@@ -267,8 +314,9 @@ defmodule Scurr.PolygonMapTest do
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
     # Two holes with concave point each
     holes = [
-      [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
+      [{5, 5}, {7, 5}, {7, 7}, {5, 7}]
     ]
+
     vertices = PolygonMap.get_vertices(polygon, holes)
     graph = PolygonMap.create_graph(polygon, holes, vertices)
     points = [{0, 0}, {20, 20}]
@@ -285,8 +333,9 @@ defmodule Scurr.PolygonMapTest do
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
     # Two holes with concave point each
     holes = [
-      [{5, 5}, {7, 5}, {7, 7}, {5, 7}],
+      [{5, 5}, {7, 5}, {7, 7}, {5, 7}]
     ]
+
     # Eg. edge {1,2} -> {3, 4} = 1+2+3+4 = 10
     cost_fun = fn {x1, y1}, {x2, y2} -> x1 + y1 + x2 + y2 end
     vertices = PolygonMap.get_vertices(polygon, holes)

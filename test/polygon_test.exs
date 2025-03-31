@@ -9,6 +9,38 @@ defmodule Scurry.PolygonTest do
   # defp mflag_polygon(), do: polygon = [{0, 0}, {10, 0}, {5, 10}, {10, 20}, {0, 20}]
 
   ##
+  ## Polygon.intersects
+  ##
+
+  test "intersects detects point intersection" do
+    line = {{5, 5}, {15, 15}}
+    # Box
+    polygon = [{0, 10}, {10, 10}, {10, 0}, {0, 0}]
+    assert Polygon.intersects(polygon, line) == {:point_intersection, {10.0, 10.0}}
+  end
+
+  test "intersects detects edge intersection" do
+    line = {{5, 5}, {5, 15}}
+    # Box
+    polygon = [{0, 10}, {10, 10}, {10, 0}, {0, 0}]
+    assert Polygon.intersects(polygon, line) == {:intersection, {5.0, 10.0}}
+  end
+
+  test "intersects detects no intersection" do
+    line = {{20, 20}, {30, 30}}
+    # Box
+    polygon = [{0, 10}, {10, 10}, {10, 0}, {0, 0}]
+    assert Polygon.intersects(polygon, line) == :nointersection
+  end
+
+  test "intersects detects segment" do
+    line = {{1, 10}, {9, 10}}
+    # Box
+    polygon = [{0, 10}, {10, 10}, {10, 0}]
+    assert Polygon.intersects(polygon, line) == :on_segment
+  end
+
+  ##
   ## Polygon.intersects?
   ##
 
@@ -16,28 +48,28 @@ defmodule Scurry.PolygonTest do
     line = {{5, 5}, {15, 15}}
     # Box
     polygon = [{0, 10}, {10, 10}, {10, 0}, {0, 0}]
-    assert Polygon.intersects?(polygon, line) == {:point_intersection, {10.0, 10.0}}
+    assert Polygon.intersects?(polygon, line)
   end
 
   test "intersects? detects edge intersection" do
     line = {{5, 5}, {5, 15}}
     # Box
     polygon = [{0, 10}, {10, 10}, {10, 0}, {0, 0}]
-    assert Polygon.intersects?(polygon, line) == {:intersection, {5.0, 10.0}}
+    assert Polygon.intersects?(polygon, line)
   end
 
   test "intersects? detects no intersection" do
     line = {{20, 20}, {30, 30}}
     # Box
     polygon = [{0, 10}, {10, 10}, {10, 0}, {0, 0}]
-    assert Polygon.intersects?(polygon, line) == :nointersection
+    assert Polygon.intersects?(polygon, line) == false
   end
 
   test "intersects? detects segment" do
     line = {{1, 10}, {9, 10}}
     # Box
     polygon = [{0, 10}, {10, 10}, {10, 0}]
-    assert Polygon.intersects?(polygon, line) == :on_segment
+    assert Polygon.intersects?(polygon, line)
   end
 
   ##
@@ -150,7 +182,9 @@ defmodule Scurry.PolygonTest do
   test "classify_vertices" do
     # M shape
     polygon = [{0, 0}, {10, 0}, {20, 0}, {20, 20}, {10, 10}, {0, 20}]
-    assert Polygon.classify_vertices(polygon) == {[{10, 10}], [{0, 0}, {20, 0}, {20, 20}, {0, 20}]}
+
+    assert Polygon.classify_vertices(polygon) ==
+             {[{10, 10}], [{0, 0}, {20, 0}, {20, 20}, {0, 20}]}
   end
 
   test "classify_vertices triangle" do
@@ -193,5 +227,4 @@ defmodule Scurry.PolygonTest do
     assert Polygon.nearest_point_on_edge(polygon, {-1, -1}) == {0, 0}
     assert Polygon.nearest_point_on_edge(polygon, {-1, 3}) == {0, 2}
   end
-
 end

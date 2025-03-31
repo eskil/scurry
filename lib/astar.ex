@@ -3,23 +3,23 @@ defmodule Scurry.Astar do
 
   Implementation of [A-star search
   algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm) to find the
-  shortest path in 2D polygon maps.
+  shortest path in graphs or 2D polygon maps.
 
-  The basic usage is;
+  Basic usage is;
 
   ```
-  # computes the heuristic cost between two nodes
+  # Define function for the heuristic cost between two nodes
   def heur_fun(node_a, node_b) do
-    ...
+    ... returns the cost of node a to node b
   end
 
   # Define a graph
   graph = %{
     node_1 => [
-    {node_2, cost_1_2}, {node_3, cost_1_3},
+      {node_2, cost_1_to_2}, {node_3, cost_1_to_3},
     ],
     node_2 => [
-      {node_3, cost_2_3}, {node_4, cost_2_4},
+      {node_3, cost_2_to_3}, {node_4, cost_2_to_4},
     ],
     ...
   }
@@ -27,11 +27,21 @@ defmodule Scurry.Astar do
   # Do A-star search
   state = Astar.search(graph, node_1, node_z, &heur_fun/2)
 
-  # Extract path
-  path = Astart.path(state)
+  # Extract path from the state
+  path = Astar.path(state)
   [node1, ..., node_z]
   ```
+
+  See [Quickstart](quickstart.html) for a concrete end-to-end example of
+  defining a world and holes/obstacles, then using `PolygonMap` and `Astar`
+  modules to do path finding within this.
   """
+
+  require Logger
+  use Scurry.Astar.Types
+
+  @typedoc "The internal state of the A-star algorithm. Use `path/1` to extract the result."
+  @opaque state :: map()
 
   @doc """
   Find shortest path in `graph` from `start` to `stop`.
@@ -45,16 +55,17 @@ defmodule Scurry.Astar do
     `graph` to `stop`. It takes two nodes and returns a cost that should be
     comparable with itself for ordering. `node, node :: term`.
 
-  Returns the algorithms internal state which can be passed to `path/1` to
+  ## Returns
+
+  The algorithms internal state which can be passed to `path/1` to
   obtain the actual path.
   """
-
-  require Logger
-
+  @spec search(graph(), gnode(), gnode(), cost_fun()) :: state()
   def search(graph, start, stop, heur_fun) do
     # Logger.info("----------------------------------------- A-star")
     # Logger.info("graph = #{inspect graph, pretty: true}")
     queue = [start]
+
     %{
       start: start,
       stop: stop,
@@ -62,7 +73,6 @@ defmodule Scurry.Astar do
 
       # (node, node) :: cost function
       heur_fun: heur_fun,
-
       queue: queue,
       shortest_path_tree: %{},
       frontier: %{},
@@ -81,14 +91,14 @@ defmodule Scurry.Astar do
 
   defp add_to_queue(queue, node) do
     Enum.sort(queue ++ [node])
-    |> Enum.dedup
+    |> Enum.dedup()
   end
 
-  defp pathfind_helper(%{queue: []}=state) do
+  defp pathfind_helper(%{queue: []} = state) do
     state
   end
 
-  defp pathfind_helper(%{queue: [current|queue]}=state) do
+  defp pathfind_helper(%{queue: [current | queue]} = state) do
     # Logger.info("----------------------------------------- A-star search")
     # Logger.info("current = #{inspect current, pretty: true}")
     # Logger.info("state = #{inspect Map.delete(state, :graph), pretty: true}")
@@ -98,6 +108,7 @@ defmodule Scurry.Astar do
     cond do
       current == state.stop ->
         %{state | shortest_path_tree: spt}
+
       true ->
         edges = Map.get(state.graph, current, [])
 
@@ -123,35 +134,39 @@ defmodule Scurry.Astar do
                 # No reason to go back
                 # Logger.info("skip going back to start")
                 acc
+
               not Map.has_key?(frontier, node) ->
                 {
                   Map.put(frontier, node, current),
                   add_to_queue(queue, node),
                   Map.put(g_cost, node, shortest_distance_from_start),
-                  Map.put(f_cost, node, total_distance),
+                  Map.put(f_cost, node, total_distance)
                 }
-              shortest_distance_from_start < Map.get(g_cost, node, 0) and Map.get(spt, node) == nil ->
+
+              shortest_distance_from_start < Map.get(g_cost, node, 0) and
+                  Map.get(spt, node) == nil ->
                 {
                   Map.put(frontier, node, current),
                   queue,
                   Map.put(g_cost, node, shortest_distance_from_start),
-                  Map.put(f_cost, node, total_distance),
+                  Map.put(f_cost, node, total_distance)
                 }
+
               true ->
                 {frontier, queue, g_cost, f_cost}
             end
           end)
 
         new_state = %{
-          state |
-          queue: sort_queue(q, f_cost),
-          frontier: f,
-          f_cost: f_cost,
-          g_cost: g_cost,
-          shortest_path_tree: spt,
+          state
+          | queue: sort_queue(q, f_cost),
+            frontier: f,
+            f_cost: f_cost,
+            g_cost: g_cost,
+            shortest_path_tree: spt
         }
 
-      pathfind_helper(new_state)
+        pathfind_helper(new_state)
     end
   end
 
@@ -162,12 +177,18 @@ defmodule Scurry.Astar do
 
   * `state` the a-star state returned by `search/4`
 
-  Returns the path.
+  ## Returns
+
+  The path as a list of nodes. The type of the node is the same as in the
+  `t:graph/0` used in the call to `search/4`.
+
   """
+  @spec path(state()) :: list(gnode())
   def path(state) do
     next = state.shortest_path_tree[state.stop]
+
     path(state, state.start, next, [state.stop])
-    |> Enum.reverse
+    |> Enum.reverse()
   end
 
   defp path(_state, _start, nil, acc) do

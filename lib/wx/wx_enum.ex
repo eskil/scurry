@@ -3,7 +3,9 @@ defmodule Scurry.WxEnum do
   @author "Onorio Catenacci"
   @author "Dominic Letz"
   @last_revision_date "22 May 2019"
-  @moduledoc """
+  @moduledoc false
+
+  """
   Elixir version of the constants found in the wx.hrl file
 
   From https://gist.github.com/dominicletz/5da3637275d81a421bc6aa72ae5c31c7
@@ -845,6 +847,7 @@ defmodule Scurry.WxEnum do
   def wxWS_EX_BLOCK_EVENTS, do: 2
   def wxWS_EX_VALIDATE_RECURSIVELY, do: 1
 
+  @dialyzer {:nowarn_function, wxWINDOW_STYLE_MASK: 0}
   def wxWINDOW_STYLE_MASK,
     do:
       wxVSCROLL()
