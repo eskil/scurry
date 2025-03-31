@@ -12,6 +12,9 @@ defmodule Scurry.Geo do
   @doc """
   Determine if, where and how two lines intersect.
 
+  This function computes whether two lines intersect (cross each other) touch
+  on an endpoint or are on top of each other.
+
   ## Params
 
   * `line1` (`t:line/0`) a line segment
@@ -21,7 +24,7 @@ defmodule Scurry.Geo do
 
   * `:none` no intersection.
   * `:parallel` the lines are parallel and _do not_ intersect.
-  * `:on_segment` one line is on the other.
+  * `:on_segment` one line is on the other. They may extend past each other's endpoints.
   * `{:point_intersection, vector}` either line has an _endpoint_ on the other
     line. This means they just touch at the returned vector.
   * `{:intersection, vector}` the lines intersect at the returned vector.
@@ -30,6 +33,8 @@ defmodule Scurry.Geo do
       iex> Geo.line_segment_intersection({{1, 2}, {4, 2}}, {{2, 0}, {3, 0}})
       :parallel
       iex> Geo.line_segment_intersection({{1, 2}, {4, 2}}, {{2, 2}, {3, 2}})
+      :on_segment
+      iex> Geo.line_segment_intersection({{1, 2}, {4, 2}}, {{2, 2}, {5, 2}})
       :on_segment
       iex> Geo.line_segment_intersection({{1, 2}, {4, 2}}, {{2, 0}, {2, 1}})
       :none
@@ -72,8 +77,9 @@ defmodule Scurry.Geo do
   Get the distance squared from `point` to `line`.
 
   ## Params
-  * `line` a `t:line/0`.
-  * `point` a `t:vector/0`
+
+  * `line` (`t:line/0`) the line to compute the distance squared to.
+  * `point` (`t:vector/0`) the point to compute the distance squared to `line` for.
 
   ## Returns
 
@@ -101,12 +107,14 @@ defmodule Scurry.Geo do
   end
 
   @doc """
-  Get the distance from a point to a line/segment, aka the square root of
-  `distance_squared/2`.
+  Get the distance from a point to a line/segment.
+
+  This is  the square root of `distance_squared/2`.
 
   ## Params
-  * `line` a `t:line/0`.
-  * `point` a `t:vector/0`
+
+  * `line` (`t:line/0`) the line to compute the distance to.
+  * `point` (`t:vector/0`) the point to compute the distance to `line` for.
 
   ## Returns
 
@@ -130,17 +138,17 @@ defmodule Scurry.Geo do
   This is kept/provided for historic purposes.
 
   ## Params
-  * `line1`
-  * `line2`
+  * `line1` (`t:line/0`) a line to check for intersection with
+  * `line2` (`t:line/0`) a line to check if it intersects with `line1`.
 
   ## Returns
 
   `true` if they intersect, `false` otherwise.
 
-  ## Note
-
-  Tthis doesn't handle segment overlap or points touching. Use
-  `line_segment_intersection/2` instead for that level of detail.
+  > ## Note
+  >
+  > This doesn't handle segment overlap or points touching. Use
+  > `line_segment_intersection/2` instead for that level of detail.
   """
   # ported from http://www.david-gouveia.com/portfolio/pathfinding-on-a-2d-polygonal-map/
   @spec do_lines_intersect?(line(), line()) :: boolean()

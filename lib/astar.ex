@@ -31,6 +31,10 @@ defmodule Scurry.Astar do
   path = Astar.path(state)
   [node1, ..., node_z]
   ```
+
+  See [Quickstart](quickstart.html) for a concrete end-to-end example of
+  defining a world and holes/obstacles, then using `PolygonMap` and `Astar`
+  modules to do path finding within this.
   """
 
   require Logger
