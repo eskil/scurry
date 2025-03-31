@@ -11,6 +11,10 @@ defmodule Scurry.PolygonMap do
   The use case is eg. making a map (the **main** polygon) with obstacles (the
   **holes**), and use the `Astar` module to find the shortest path between
   points in the map.
+
+  See [Quickstart](quickstart.html) for a concrete end-to-end example of
+  defining a world and holes/obstacles, then using `PolygonMap` and `Astar`
+  modules to do path finding within this.
   """
 
   alias Scurry.Polygon
@@ -30,8 +34,8 @@ defmodule Scurry.PolygonMap do
 
   ## Returns
 
-  The walkmap, a list of vertices that are the `worlds`'s concave vertices and
-  the convex ones of the `holes`.
+  The walkmap as a `t:list/0` of `t:vector/0` that are the `worlds`'s concave
+  vertices and the convex ones of the `holes`.
 
   These are used when generating the walk map, since only the `world`'s concave
   and the `holes`' convex ones limit where you can traverse in a 2D map. Any
@@ -69,15 +73,15 @@ defmodule Scurry.PolygonMap do
 
   ## Returns
 
-  A map of all node to node
+  A `t:graph/0`, which is a map of all node to node reachable edges and their
+  cost. This graphs is one of the parameters for a call to `Astar.search/4`.
 
-  ## Todo
+  > ## Todo
+  >
+  > This should ideally take `line_of_sight/3` as a function so users can
+  > customise which vertices can reach each other. But for now, users can make
+  > the graph themselves just as easily.
 
-  This should ideally take `line_of_sight/3` as a function so users can
-  customise which vertices can reach each other. But for now, users can make
-  the graph themselves just as easily.
-
-  See [Quickstart](quickstart.html) for a concrete example.
   """
   @spec create_graph(polygon(), list(polygon()), list(vector()), cost_fun()) :: graph()
   def create_graph(world, holes, vertices, cost_fun \\ nil)
@@ -155,29 +159,37 @@ defmodule Scurry.PolygonMap do
   end
 
   @doc """
-  Find the nearest point on the line that is inside the map and outside a hole.
+
+  Find the nearest point on the line that is inside the world polygion and
+  outside all hole polygons.
+
+  The purpose of this function is to determine compute a suitable end for the
+  `points` parameter for `extend_graph/6`. Imagine a UI in which the users
+  clicks on a point to walk to. If that click is outside the world map or
+  inside a hole/obstacle, we can either refuse to compute a path, or we can use
+  `nearest_point/3` to find the closest reachable point to the click.
 
   ## Params
 
-  * `polygon`, a list of `{x, y}` vertices. This is the main boundary map.
-  * `holes`, a list of lists of `{x, y}` vertices. These are holes within
-    `polygon`.
-  * `point` a tuple of coordinates (`{x, y}`) describing a point
+  * `world` (`t:polygon/0`) the polygon that defines the outer boundary.
+  * `holes` (`t:list/0`), a list of `t:polygon/0` that define holes/obstacles inside `world`.
+  * `point` (`t:vector/0`) the point for which to find the nearst point.
 
-  The function will return a new point `{bx, by}` for b such that;
+  ## Returns
 
-  * if `{bx, by}` is outside the main map, the new b is the closest point on
-    the main map.
+  A new point (`t:vector/0`) `p={x, y}` such that;
 
-  * if b is inside the main map, but also inside a hole, the new bis the
-    closest point on the holes edges.
+  * if `point` is _outside_ the world polygon, the new `p` is the closest point *on*
+    the edge of the `world` polygon.
+
+  * if `point` is _inside_ the world polygon, but also *inside* any hole
+  polygon, the `p` the closest point on the edge of the hole it's in.
+
   """
-  def nearest_point([], _, point) do
-    point
-  end
+    def nearest_point([], _, point) do point end
 
-  def nearest_point(polygon, holes, point) do
-    nearest_point_helper(polygon, holes, point, Polygon.is_inside?(polygon, point))
+  def nearest_point(world, holes, point) do
+    nearest_point_helper(world, holes, point, Polygon.is_inside?(world, point))
   end
 
   defp nearest_point_helper(_, holes, point, true) do
@@ -208,8 +220,8 @@ defmodule Scurry.PolygonMap do
     nearest_boundary_point_helper(hole, point)
   end
 
-  defp nearest_boundary_point_helper(polygon, point) do
-    {x, y} = Polygon.nearest_point_on_edge(polygon, point)
+  defp nearest_boundary_point_helper(world, point) do
+    {x, y} = Polygon.nearest_point_on_edge(world, point)
 
     # This is a problematic area - we want to round towards the start of the
     # line Eg. in complex.json scene, clicking {62, 310} yields {64.4, 308.8},
@@ -235,19 +247,19 @@ defmodule Scurry.PolygonMap do
     d = {floor(x), floor(y)}
 
     cond do
-      Polygon.is_outside?(polygon, p, allow_border: false) ->
+      Polygon.is_outside?(world, p, allow_border: false) ->
         p
 
-      Polygon.is_outside?(polygon, a, allow_border: false) ->
+      Polygon.is_outside?(world, a, allow_border: false) ->
         a
 
-      Polygon.is_outside?(polygon, b, allow_border: false) ->
+      Polygon.is_outside?(world, b, allow_border: false) ->
         b
 
-      Polygon.is_outside?(polygon, c, allow_border: false) ->
+      Polygon.is_outside?(world, c, allow_border: false) ->
         c
 
-      Polygon.is_outside?(polygon, d, allow_border: false) ->
+      Polygon.is_outside?(world, d, allow_border: false) ->
         d
     end
 

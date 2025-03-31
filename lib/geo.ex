@@ -13,10 +13,12 @@ defmodule Scurry.Geo do
   Determine if, where and how two lines intersect.
 
   ## Params
-  * `line1` a line segment
-  * `line2` a line segment to check where and how it intersects with `line1`.
+
+  * `line1` (`t:line/0`) a line segment
+  * `line2` (`t:line/0`) a line segment to check where and how it intersects with `line1`.
 
   ## Returns
+
   * `:none` no intersection.
   * `:parallel` the lines are parallel and _do not_ intersect.
   * `:on_segment` one line is on the other.
