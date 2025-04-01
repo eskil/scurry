@@ -297,7 +297,11 @@ defmodule Scurry.Vector do
     2 * :math.pi() - angle({x, -y})
   end
 
-  def angle({0.0, _y} = _v) do
+  def angle({+0.0, _y} = _v) do
+    :math.pi() / 2
+  end
+
+  def angle({-0.0, _y} = _v) do
     :math.pi() / 2
   end
 
