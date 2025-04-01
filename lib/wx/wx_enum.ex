@@ -1,15 +1,15 @@
 defmodule Scurry.WxEnum do
   @vsn "0.0.2"
-  @author "Onorio Catenacci"
-  @author "Dominic Letz"
-  @last_revision_date "22 May 2019"
   @moduledoc false
 
-  """
-  Elixir version of the constants found in the wx.hrl file
+  # Commented out to preserve credits but fix compiler warnings.
+  # @author "Onorio Catenacci"
+  # @author "Dominic Letz"
+  # @last_revision_date "22 May 2019"
 
-  From https://gist.github.com/dominicletz/5da3637275d81a421bc6aa72ae5c31c7
-  """
+  # Elixir version of the constants found in the wx.hrl file
+  # From https://gist.github.com/dominicletz/5da3637275d81a421bc6aa72ae5c31c7
+
   import Bitwise
   require Record
 
