@@ -89,7 +89,7 @@ defmodule Scurry.Geo do
       iex> Geo.distance_to_segment_squared({{2, 0}, {2, 2}}, {0, 1})
       4.0
   """
-  @spec distance_to_segment_squared(vector(), line()) :: float()
+  @spec distance_to_segment_squared(line(), vector()) :: float()
   def distance_to_segment_squared({{vx, vy} = v, {wx, wy} = w} = _line, {px, py} = point) do
     l2 = Vector.distance_squared(v, w)
 
@@ -124,7 +124,7 @@ defmodule Scurry.Geo do
       iex> Geo.distance_to_segment({{2, 0}, {2, 2}}, {0, 1})
       2.0
   """
-  @spec distance_to_segment(vector(), line()) :: float()
+  @spec distance_to_segment(line(), vector()) :: float()
   def distance_to_segment(line, point) do
     :math.sqrt(distance_to_segment_squared(line, point))
   end

@@ -83,7 +83,7 @@ defmodule Scurry.PolygonMap do
   > the graph themselves just as easily.
 
   """
-  @spec create_graph(polygon(), list(polygon()), list(vector()), cost_fun()) :: graph()
+  @spec create_graph(polygon(), list(polygon()), list(vector()), cost_fun() | nil) :: graph()
   def create_graph(world, holes, vertices, cost_fun \\ nil)
 
   def create_graph(world, holes, vertices, nil) do
