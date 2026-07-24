@@ -4,6 +4,7 @@ defmodule Scurry.AstarTest do
   alias Scurry.Astar
   doctest Astar
 
+  ##############################################################################
   # This test uses the graph and values from
   # https://www.101computing.net/a-star-search-algorithm/
 
@@ -55,6 +56,14 @@ defmodule Scurry.AstarTest do
     assert path == ["a", "c", "d", "e", "z"]
   end
 
+  test "a-star start equals stop" do
+    state = Astar.search(graph_101(), "a", "a", &heur_101/2)
+    path = Astar.path(state)
+    assert path == ["a"]
+  end
+
+  ##############################################################################
+  # This is a version of 101 that includes a loop back to start (a)
   def graph_101_loops() do
     %{
       "a" => [
@@ -106,6 +115,9 @@ defmodule Scurry.AstarTest do
     assert Enum.sort(Map.keys(state.g_cost)) == ["b", "c", "z"]
   end
 
+  ##############################################################################
+  # Sanity checks that even if stop is reachable early but costlier, we find a
+  # cheaper but longer path.
   def graph_long_way() do
     %{
       "a" => [
@@ -150,6 +162,7 @@ defmodule Scurry.AstarTest do
   end
 
 
+  ##############################################################################
   # Test trying to find an unreachable node.
   # Define a graph with a->b.
   def graph_dead_end() do
