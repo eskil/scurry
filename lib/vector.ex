@@ -297,6 +297,9 @@ defmodule Scurry.Vector do
     2 * :math.pi() - angle({x, -y})
   end
 
+  # +0.0 and -0.0 are distinct bit patterns and both match here even though
+  # `x < 0` above is false for either (IEEE: -0.0 < 0 is false), so both need
+  # their own clause even though they're numerically equal (0.0 == -0.0).
   def angle({+0.0, _y} = _v) do
     :math.pi() / 2
   end
@@ -305,6 +308,8 @@ defmodule Scurry.Vector do
     :math.pi() / 2
   end
 
+  # Plain integer 0 falls through to its own clause since it doesn't match
+  # the float patterns above.
   def angle({0, _y} = _v) do
     :math.pi() / 2
   end
