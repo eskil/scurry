@@ -37,7 +37,6 @@ defmodule Scurry.Astar do
   modules to do path finding within this.
   """
 
-  require Logger
   use Scurry.Astar.Types
 
   @typedoc "The internal state of the A-star algorithm. Use `path/1` to extract the result."
@@ -62,8 +61,6 @@ defmodule Scurry.Astar do
   """
   @spec search(graph(), gnode(), gnode(), cost_fun()) :: state()
   def search(graph, start, stop, heur_fun) do
-    # Logger.info("----------------------------------------- A-star")
-    # Logger.info("graph = #{inspect graph, pretty: true}")
     queue = [start]
 
     %{
@@ -94,15 +91,13 @@ defmodule Scurry.Astar do
     |> Enum.dedup()
   end
 
+  # Queue exhausted without reaching stop - stop is unreachable from start.
   defp pathfind_helper(%{queue: []} = state) do
     state
   end
 
   defp pathfind_helper(%{queue: [current | queue]} = state) do
-    # Logger.info("----------------------------------------- A-star search")
-    # Logger.info("current = #{inspect current, pretty: true}")
-    # Logger.info("state = #{inspect Map.delete(state, :graph), pretty: true}")
-
+    # spt is Shortest Path Tree
     spt = Map.put(state.shortest_path_tree, current, Map.get(state.frontier, current))
 
     cond do
@@ -112,30 +107,25 @@ defmodule Scurry.Astar do
       true ->
         edges = Map.get(state.graph, current, [])
 
-        # Logger.info("edges = #{inspect edges, pretty: true}")
-
         reduce_seed = {state.frontier, queue, state.g_cost, state.f_cost}
 
         {f, q, g_cost, f_cost} =
           Enum.reduce(edges, reduce_seed, fn {node, edge_cost}, acc ->
             {frontier, queue, g_cost, f_cost} = acc
-            # H cost
+            # H cost, the heuristic cost to get to this node
             heur_cost = state.heur_fun.(node, state.stop)
-            # G cost
+            # G cost, the current shortest cost from the start node
             shortest_distance_from_start = Map.get(g_cost, current, 0) + edge_cost
-            # F cost = G cost + H cost
+            # F cost = G cost + H cost, the cost to get to this node
             total_distance = shortest_distance_from_start + heur_cost
-            # Logger.info("\t#{inspect node} heur_cost = #{heur_cost}")
-            # Logger.info("\t#{inspect node} new g_cost = #{shortest_distance_from_start}")
-            # Logger.info("\t#{inspect node} new cost = #{total_distance}\n")
 
             cond do
               node == state.start ->
-                # No reason to go back
-                # Logger.info("skip going back to start")
+                # Never go back to the start node (cycle)
                 acc
 
               not Map.has_key?(frontier, node) ->
+                # We have not visited this node before, so account for it's cost.
                 {
                   Map.put(frontier, node, current),
                   add_to_queue(queue, node),
@@ -144,7 +134,11 @@ defmodule Scurry.Astar do
                 }
 
               shortest_distance_from_start < Map.get(g_cost, node, 0) and
-                  Map.get(spt, node) == nil ->
+                Map.get(spt, node) == nil ->
+                # We've already seen this node and it's still open (not yet
+                # finalized in spt), but this path to it is cheaper than what
+                # we had — update its cost. It's already in the queue from when
+                # it was first discovered, so no need to add_to_queue again.
                 {
                   Map.put(frontier, node, current),
                   queue,

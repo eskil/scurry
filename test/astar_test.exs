@@ -148,4 +148,23 @@ defmodule Scurry.AstarTest do
     path = Astar.path(state)
     assert path == ["a", "b", "c", "d", "e", "f", "z"]
   end
+
+
+  # Test trying to find an unreachable node.
+  # Define a graph with a->b.
+  def graph_dead_end() do
+    %{
+      "a" => [{"b", 1}],
+      "b" => []
+    }
+  end
+
+  # heur doesn't matter
+  def heur_dead_end(_from, _to), do: 0
+
+  test "a-star unreachable stop" do
+    state = Astar.search(graph_dead_end(), "a", "z", &heur_dead_end/2)
+    path = Astar.path(state)
+    assert path == ["z"]
+  end
 end
