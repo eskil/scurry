@@ -37,8 +37,12 @@ jobs:
       run: mix deps.get
     - name: Compile dependencies
       run: mix deps.compile
+      env:
+        MIX_ENV: test
     - name: Compile
       run: mix compile
+      env:
+        MIX_ENV: test
     - name: Run tests
       run: mix test --trace
     - name: Dialyzer
