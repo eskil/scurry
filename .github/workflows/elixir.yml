@@ -25,8 +25,8 @@ jobs:
     - name: Set up Elixir
       uses: erlef/setup-beam@v1
       with:
-        elixir-version: '1.18'
-        otp-version: '27'
+        elixir-version: '1.20'
+        otp-version: '29'
     - name: Restore dependencies cache
       uses: actions/cache@v3
       with:
@@ -35,6 +35,14 @@ jobs:
         restore-keys: ${{ runner.os }}-mix-
     - name: Install dependencies
       run: mix deps.get
+    - name: Compile dependencies
+      run: mix deps.compile
+      env:
+        MIX_ENV: test
+    - name: Compile
+      run: mix compile
+      env:
+        MIX_ENV: test
     - name: Run tests
       run: mix test --trace
     - name: Dialyzer

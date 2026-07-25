@@ -71,7 +71,7 @@ Adding `scurry` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:scurry, "~> 2.0"},
+    {:scurry, "~> 3.0"},
   ]
 end
 ```

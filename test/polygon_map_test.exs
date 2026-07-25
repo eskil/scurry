@@ -81,6 +81,26 @@ defmodule Scurr.PolygonMapTest do
     assert PolygonMap.nearest_point(polygon, holes, {64, 59}) == {63, 57}
   end
 
+  test "nearest_point stop in hole floor-ceil" do
+    polygon = [{0, 0}, {100, 0}, {200, 0}, {200, 200}, {100, 100}, {0, 200}]
+
+    holes = [
+      [{53, 47}, {54, 67}, {52, 69}]
+    ]
+
+    assert PolygonMap.nearest_point(polygon, holes, {53.0, 57.4}) == {52, 58}
+  end
+
+  test "nearest_point stop in hole floor-floor" do
+    polygon = [{0, 0}, {100, 0}, {200, 0}, {200, 200}, {100, 100}, {0, 200}]
+
+    holes = [
+      [{43, 61}, {59, 49}, {61, 64}]
+    ]
+
+    assert PolygonMap.nearest_point(polygon, holes, {57.8, 50.3}) == {57, 50}
+  end
+
   ##
   ## PolygonMap.is_line_of_sight?
   ##

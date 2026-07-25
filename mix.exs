@@ -14,16 +14,21 @@ defmodule Scurry.MixProject do
       deps: deps(),
       dialyzer: [plt_add_apps: [:poison]],
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test
-      ],
       source_url: "https://github.com/eskil/scurry",
       docs: [
         extras: ["Quickstart.md"]
       ],
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
