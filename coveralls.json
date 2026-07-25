@@ -1,6 +1,8 @@
 {
     "skip_files": [
 	"lib/wx/demo.ex",
-	"lib/wx/wx_enum.ex"
+	"lib/wx/wx_enum.ex",
+	"lib/astar_types.ex",
+	"lib/types.ex"
     ]
 }
