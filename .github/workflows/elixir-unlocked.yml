@@ -20,9 +20,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        otp: ['27', '28', '29']
-        elixir: ['1.18', '1.19', '1.20']
-        exclude:
+        include:
+          - elixir: '1.14'
+            otp: '26'
+          - elixir: '1.15'
+            otp: '26'
+          - elixir: '1.16'
+            otp: '26'
+          - elixir: '1.17'
+            otp: '27'
           - elixir: '1.18'
             otp: '27'
           - elixir: '1.19'
