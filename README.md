@@ -7,6 +7,7 @@ Scurry
 [![Documentation](https://img.shields.io/badge/hexdocs-quickstart-blue)](https://hexdocs.pm/scurry/quickstart.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Hex.pm Download Total](https://img.shields.io/hexpm/dt/scurry.svg?style=flat-square)](https://hex.pm/packages/scurry)
+[![Hex.pm Dependents](https://img.shields.io/librariesio/dependents/hex/scurry)](https://hex.pm/packages/scurry)
 ![Static Badge](https://img.shields.io/badge/ircv3-no-blue)
 
 An
