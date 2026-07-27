@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.2 - 2026-07-26
+
+- Fix OTP 27 warning
+- Fix dialyzer warnings
+- Add dialyzer to CI/CD and other housekeeping
+- Increase coverage
+
 ## 3.0.1 - 2025-03-31
 
 - Fix dialyzer warnings
