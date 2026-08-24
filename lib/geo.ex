@@ -1,6 +1,6 @@
 defmodule Scurry.Geo do
   @moduledoc """
-  Geometry functions related to lines relevant for 2D map pathfinding.
+  Geometry functions related to lines and polygons.
   """
 
   alias Scurry.Vector
