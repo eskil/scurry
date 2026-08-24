@@ -184,18 +184,18 @@ defmodule Scurry.Geo do
   the two vertices are merged to join the polygons.
   """
 
-  @spec merge([polygon()]) :: [polygon()]
-  def merge(polygons) do
+  @spec merge_polygons([polygon()]) :: [polygon()]
+  def merge_polygons(polygons) do
     # Recursive merge until there's no longer any changes.
-    case merge_once(polygons) do
-      {:merged, polygons} -> merge(polygons)
+    case merge_polygons_once(polygons) do
+      {:merged, polygons} -> merge_polygons(polygons)
       :unchanged -> polygons
     end
   end
 
   # Try to merge one pair of polygons in the list. Returns `{:merged, list}`
   # with the merged pair spliced in, or `:unchanged` if no pair overlaps.
-  defp merge_once(polygons) do
+  defp merge_polygons_once(polygons) do
     count = length(polygons)
 
     Enum.find_value(0..(count - 1)//1, :unchanged, fn i ->
@@ -203,7 +203,7 @@ defmodule Scurry.Geo do
         a = Enum.at(polygons, i)
         b = Enum.at(polygons, j)
 
-        case merge_pair(a, b) do
+        case merge_polygon_pair(a, b) do
           {:merged, merged} ->
             rest =
               polygons
@@ -222,7 +222,7 @@ defmodule Scurry.Geo do
   # Merge two polygons that share (part of) an edge. `:on_segment` edge pairs
   # are found, the shared portions are cancelled out of both polygons and the
   # remaining edges are walked to reconstruct the combined boundary.
-  defp merge_pair(a, b) do
+  defp merge_polygon_pair(a, b) do
     edges_a = polygon_edges(a)
     edges_b = polygon_edges(b)
 
@@ -246,12 +246,20 @@ defmodule Scurry.Geo do
     end
   end
 
+  # Turn a polygon's vertex list into its directed boundary edges, each a
+  # `{from, to}` pair in the polygon's own winding order, wrapping the last
+  # edge back around to the first vertex.
   defp polygon_edges(polygon) do
     polygon
     |> Enum.chunk_every(2, 1, Enum.slice(polygon, 0, 2))
     |> Enum.map(fn [p1, p2] -> {p1, p2} end)
   end
 
+  # Compare every edge of `edges_a` against every edge of `edges_b` and
+  # collect the ones that genuinely overlap (not just touch at a point).
+  # A polygon pair can share more than one edge (eg. one polygon filling a
+  # notch in another), so this returns *all* overlapping pairs found, not
+  # just the first.
   defp find_edge_overlaps(edges_a, edges_b) do
     for ea <- edges_a,
         eb <- edges_b,
@@ -286,6 +294,9 @@ defmodule Scurry.Geo do
     end
   end
 
+  # Rebuild `edges` (from one side of an overlapping pair) with any edge
+  # that has a matching overlap replaced by what's left of it once the
+  # shared portion is cut out. Edges with no overlap pass through unchanged.
   defp replace_overlapping_edges(edges, overlaps, side) do
     Enum.flat_map(edges, fn edge ->
       case find_overlap_for(edge, overlaps, side) do
@@ -295,6 +306,9 @@ defmodule Scurry.Geo do
     end)
   end
 
+  # Look up the overlap range recorded for `edge` on the given `side` (`:a`
+  # for `edges_a`, `:b` for `edges_b`) of an `{ea, eb, range}` overlap
+  # tuple, or `nil` if this edge isn't part of any overlap.
   defp find_overlap_for(edge, overlaps, :a) do
     Enum.find_value(overlaps, fn {ea, _eb, range} -> ea == edge && range end)
   end
@@ -326,6 +340,8 @@ defmodule Scurry.Geo do
     walk_edges(edge_map, start, start, [start])
   end
 
+  # Follow `edge_map` one hop at a time from `current`, accumulating
+  # vertices, until we arrive back at `start`, then return them in order.
   defp walk_edges(edge_map, start, current, acc) do
     next = Map.fetch!(edge_map, current)
 

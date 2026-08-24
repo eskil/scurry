@@ -87,7 +87,7 @@ defmodule Scurry.GeoTest do
     expected = [
       [{0, 0}, {2, 0}, {2, 3}, {0, 3}]
     ]
-    assert Geo.merge([a, b]) == expected
+    assert Geo.merge_polygons([a, b]) == expected
   end
 
   test "merge when line partially overlap" do
@@ -96,7 +96,7 @@ defmodule Scurry.GeoTest do
     expected = [
       [{0, 0}, {4, 0}, {4, 2}, {2, 2}, {2, 3}, {1, 3}, {1, 2}, {0, 2}]
     ]
-    assert Geo.merge([a, b]) == expected
+    assert Geo.merge_polygons([a, b]) == expected
   end
 
   test "merge when no line overlap" do
@@ -105,7 +105,7 @@ defmodule Scurry.GeoTest do
     expected = [
       a, b
     ]
-    assert Geo.merge([a, b]) == expected
+    assert Geo.merge_polygons([a, b]) == expected
   end
 
   test "merge recurses until there's no more changes" do
@@ -118,7 +118,7 @@ defmodule Scurry.GeoTest do
     c = [{0, 4}, {2, 4}, {2, 6}, {0, 6}]
     expected = [{0, 0}, {2, 0}, {2, 6}, {0, 6}]
 
-    assert [merged] = Geo.merge([b, c, a])
+    assert [merged] = Geo.merge_polygons([b, c, a])
     assert rotate_to(merged, {0, 0}) == expected
   end
 
@@ -133,7 +133,7 @@ defmodule Scurry.GeoTest do
     expected = [
       [{0, 0}, {4, 0}, {4, 4}, {0, 4}]
     ]
-    assert Geo.merge([a, b]) == expected
+    assert Geo.merge_polygons([a, b]) == expected
   end
 
   test "merge combines many polygons sharing a common vertex" do
@@ -150,7 +150,7 @@ defmodule Scurry.GeoTest do
     expected = [
       [{0, 0}, {2, 0}, {2, 2}, {0, 2}]
     ]
-    assert Geo.merge([p1, p2, p3, p4]) == expected
+    assert Geo.merge_polygons([p1, p2, p3, p4]) == expected
   end
 
   # Merge doesn't guarantee which vertex a merged polygon starts at, so
