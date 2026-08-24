@@ -122,6 +122,37 @@ defmodule Scurry.GeoTest do
     assert rotate_to(merged, {0, 0}) == expected
   end
 
+  test "merge cancels multiple overlapping edges between the same two polygons" do
+    # `a` is a 4x4 square with a 2x2 notch cut out of its top-right corner,
+    # and `b` is the 2x2 square that exactly fills the notch. They share two
+    # separate edges (the notch's bottom and left inner edges) at once, not
+    # just one, so this only passes if every overlapping edge pair gets
+    # cancelled, not just the first one found.
+    a = [{0, 0}, {4, 0}, {4, 2}, {2, 2}, {2, 4}, {0, 4}]
+    b = [{2, 2}, {4, 2}, {4, 4}, {2, 4}]
+    expected = [
+      [{0, 0}, {4, 0}, {4, 4}, {0, 4}]
+    ]
+    assert Geo.merge([a, b]) == expected
+  end
+
+  test "merge combines many polygons sharing a common vertex" do
+    # Four unit squares arranged in a 2x2 grid, all meeting at {1, 1}. Every
+    # square shares a full edge with its two orthogonal neighbours (but only
+    # touches its diagonal neighbour at that single shared point), so this
+    # only passes if overlapping edges are cancelled across every pair in
+    # the list, not just adjacent list entries, and a point-touch alone
+    # isn't mistaken for an edge overlap.
+    p1 = [{0, 0}, {1, 0}, {1, 1}, {0, 1}]
+    p2 = [{1, 0}, {2, 0}, {2, 1}, {1, 1}]
+    p3 = [{1, 1}, {2, 1}, {2, 2}, {1, 2}]
+    p4 = [{0, 1}, {1, 1}, {1, 2}, {0, 2}]
+    expected = [
+      [{0, 0}, {2, 0}, {2, 2}, {0, 2}]
+    ]
+    assert Geo.merge([p1, p2, p3, p4]) == expected
+  end
+
   # Merge doesn't guarantee which vertex a merged polygon starts at, so
   # rotate it back to a known starting vertex before comparing.
   defp rotate_to(polygon, start) do
