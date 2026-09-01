@@ -1,6 +1,6 @@
 defmodule Scurry.Geo do
   @moduledoc """
-  Geometry functions related to lines relevant for 2D map pathfinding.
+  Geometry functions related to lines and polygons.
   """
 
   alias Scurry.Vector
@@ -169,5 +169,236 @@ defmodule Scurry.Geo do
         r > 0 and r < 1 and (s > 0 and s < 1)
       end
     end
+  end
+
+  @doc """
+  Merge polygons.
+
+  Iterate over all vertices of the given polygons and merge where vertices
+  are `:on_segment` with each other. This allows you to manage your polygons as sharing
+  vectors and combine into larger polygons.
+
+  This iterates over all the polygons and their vertices and uses
+  `line_segment_intersection/2` to check for overlap. If the overlap is
+  `:on_segment` (meaning the two vertices entirely or partially are on top of each other,
+  the two vertices are merged to join the polygons.
+
+  ## Options
+
+  * `:exact` (default `false`) when `true`, only cancel edges that are exact
+  matches - ie. an edge in one polygon whose two vertices are precisely the
+  reverse of an edge in the other. Partial or extending overlaps (where an
+  edge is a sub-segment, or extends past, another) are left alone. This is
+  a cheaper check and useful when you know your polygons were built to
+  share vertices exactly and don't want incidental collinear overlaps
+  (eg. two edges that merely touch or run alongside each other) to merge.
+  """
+
+  @spec merge_polygons([polygon()], exact: boolean()) :: [polygon()]
+  def merge_polygons(polygons, opts \\ []) do
+    exact = Keyword.get(opts, :exact, false)
+
+    # Recursive merge until there's no longer any changes.
+    case merge_polygons_once(polygons, exact) do
+      {:merged, polygons} -> merge_polygons(polygons, opts)
+      :unchanged -> polygons
+    end
+  end
+
+  # Try to merge one pair of polygons in the list. Returns `{:merged, list}`
+  # with the merged pair spliced in, or `:unchanged` if no pair overlaps.
+  defp merge_polygons_once(polygons, exact) do
+    count = length(polygons)
+
+    Enum.find_value(0..(count - 1)//1, :unchanged, fn i ->
+      Enum.find_value((i + 1)..(count - 1)//1, fn j ->
+        a = Enum.at(polygons, i)
+        b = Enum.at(polygons, j)
+
+        case merge_polygon_pair(a, b, exact) do
+          {:merged, merged} ->
+            rest =
+              polygons
+              |> List.delete_at(j)
+              |> List.delete_at(i)
+
+            {:merged, [merged | rest]}
+
+          :no_overlap ->
+            nil
+        end
+      end)
+    end)
+  end
+
+  # Merge two polygons that share (part of) an edge. `:on_segment` edge pairs
+  # are found, the shared portions are cancelled out of both polygons and the
+  # remaining edges are walked to reconstruct the combined boundary.
+  defp merge_polygon_pair(a, b, exact) do
+    edges_a = polygon_edges(a)
+    edges_b = polygon_edges(b)
+
+    overlaps = find_edge_overlaps(edges_a, edges_b, exact)
+
+    case overlaps do
+      [] ->
+        :no_overlap
+
+      _ ->
+        final_edges =
+          replace_overlapping_edges(edges_a, overlaps, :a) ++
+            replace_overlapping_edges(edges_b, overlaps, :b)
+
+        merged =
+          final_edges
+          |> walk_edges()
+          |> remove_collinear_vertices()
+
+        {:merged, merged}
+    end
+  end
+
+  # Turn a polygon's vertex list into its directed boundary edges, each a
+  # `{from, to}` pair in the polygon's own winding order, wrapping the last
+  # edge back around to the first vertex.
+  defp polygon_edges(polygon) do
+    polygon
+    |> Enum.chunk_every(2, 1, Enum.slice(polygon, 0, 2))
+    |> Enum.map(fn [p1, p2] -> {p1, p2} end)
+  end
+
+  # Compare every edge of `edges_a` against every edge of `edges_b` and
+  # collect the ones that overlap, in `{ea, eb, range}` triples where
+  # `range` is the two points bounding the overlapping portion (consumed by
+  # `split_edge/2` below). A polygon pair can share more than one edge (eg.
+  # one polygon filling a notch in another), so this returns *all*
+  # overlapping pairs found, not just the first.
+  #
+  # In `exact` mode, an edge only overlaps another that's precisely its
+  # reverse - the whole edge is always the "range", since there's nothing
+  # partial to bound.
+  defp find_edge_overlaps(edges_a, edges_b, true = _exact) do
+    for ea <- edges_a,
+        eb <- edges_b,
+        eb == reverse_edge(ea) do
+      {ea, eb, ea}
+    end
+  end
+
+  # In non-`exact` mode, edges overlap whenever they're collinear
+  # (`:on_segment`) and their ranges genuinely intersect - they need not be
+  # exact reverses of each other, just partly or fully on top of one
+  # another.
+  defp find_edge_overlaps(edges_a, edges_b, false = _exact) do
+    for ea <- edges_a,
+        eb <- edges_b,
+        line_segment_intersection(ea, eb) == :on_segment,
+        range = overlap_range(ea, eb),
+        range != :none do
+      {ea, eb, range}
+    end
+  end
+
+  defp reverse_edge({p1, p2}), do: {p2, p1}
+
+  # Given two collinear, overlapping edges, find the two points that bound
+  # the overlapping portion. These are always among the edges' own vertices,
+  # since the boundary of the intersection of two ranges is always one of
+  # the ranges' own endpoints.
+  defp overlap_range({p1, p2} = _edge_p, {q1, q2} = _edge_q) do
+    dir = Vector.sub(p2, p1)
+    t = fn point -> Vector.dot(Vector.sub(point, p1), dir) end
+
+    points = [{t.(p1), p1}, {t.(p2), p2}, {t.(q1), q1}, {t.(q2), q2}]
+    p_ts = [t.(p1), t.(p2)]
+    q_ts = [t.(q1), t.(q2)]
+
+    lo_t = max(Enum.min(p_ts), Enum.min(q_ts))
+    hi_t = min(Enum.max(p_ts), Enum.max(q_ts))
+
+    if lo_t >= hi_t do
+      :none
+    else
+      {_, lo_point} = Enum.find(points, fn {tt, _} -> tt == lo_t end)
+      {_, hi_point} = Enum.find(points, fn {tt, _} -> tt == hi_t end)
+      {lo_point, hi_point}
+    end
+  end
+
+  # Rebuild `edges` (from one side of an overlapping pair) with any edge
+  # that has a matching overlap replaced by what's left of it once the
+  # shared portion is cut out. Edges with no overlap pass through unchanged.
+  defp replace_overlapping_edges(edges, overlaps, side) do
+    Enum.flat_map(edges, fn edge ->
+      case find_overlap_for(edge, overlaps, side) do
+        nil -> [edge]
+        range -> split_edge(edge, range)
+      end
+    end)
+  end
+
+  # Look up the overlap range recorded for `edge` on the given `side` (`:a`
+  # for `edges_a`, `:b` for `edges_b`) of an `{ea, eb, range}` overlap
+  # tuple, or `nil` if this edge isn't part of any overlap.
+  defp find_overlap_for(edge, overlaps, :a) do
+    Enum.find_value(overlaps, fn {ea, _eb, range} -> ea == edge && range end)
+  end
+
+  defp find_overlap_for(edge, overlaps, :b) do
+    Enum.find_value(overlaps, fn {_ea, eb, range} -> eb == edge && range end)
+  end
+
+  # Remove the (lo, hi) portion of `edge`, keeping whatever is left on
+  # either side of it, preserving the edge's own direction.
+  defp split_edge({a, b} = _edge, {pt1, pt2} = _range) do
+    dir = Vector.sub(b, a)
+    t = fn point -> Vector.dot(Vector.sub(point, a), dir) end
+
+    {near_a, near_b} = if t.(pt1) <= t.(pt2), do: {pt1, pt2}, else: {pt2, pt1}
+
+    head = if a == near_a, do: [], else: [{a, near_a}]
+    tail = if b == near_b, do: [], else: [{near_b, b}]
+
+    head ++ tail
+  end
+
+  # Walk the remaining directed edges from vertex to vertex until we're back
+  # at the start, reconstructing the merged polygon's vertex list.
+  defp walk_edges(edges) do
+    edge_map = Map.new(edges, fn {p1, p2} -> {p1, p2} end)
+    {start, _} = hd(edges)
+
+    walk_edges(edge_map, start, start, [start])
+  end
+
+  # Follow `edge_map` one hop at a time from `current`, accumulating
+  # vertices, until we arrive back at `start`, then return them in order.
+  defp walk_edges(edge_map, start, current, acc) do
+    next = Map.fetch!(edge_map, current)
+
+    if next == start do
+      Enum.reverse(acc)
+    else
+      walk_edges(edge_map, start, next, [next | acc])
+    end
+  end
+
+  # Drop vertices that fall exactly on the straight line between their
+  # neighbours - these are left behind where a shared edge used to be.
+  defp remove_collinear_vertices(polygon) do
+    count = length(polygon)
+
+    polygon
+    |> Enum.with_index()
+    |> Enum.reject(fn {point, idx} ->
+      prev = Enum.at(polygon, rem(idx - 1 + count, count))
+      next = Enum.at(polygon, rem(idx + 1, count))
+
+      left = Vector.sub(point, prev)
+      right = Vector.sub(next, point)
+
+      Vector.cross(left, right) == 0 && Vector.dot(left, right) > 0
+    end)
+    |> Enum.map(fn {point, _idx} -> point end)
   end
 end
