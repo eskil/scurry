@@ -153,6 +153,25 @@ defmodule Scurry.GeoTest do
     assert Geo.merge_polygons([p1, p2, p3, p4]) == expected
   end
 
+  test "merge with exact: true still merges on an exact edge match" do
+    a = [{0, 0}, {2, 0}, {2, 2}, {0, 2}]
+    b = [{0, 2}, {2, 2}, {2, 3}, {0, 3}]
+    expected = [
+      [{0, 0}, {2, 0}, {2, 3}, {0, 3}]
+    ]
+    assert Geo.merge_polygons([a, b], exact: true) == expected
+  end
+
+  test "merge with exact: true does not merge on a partial edge overlap" do
+    # Same polygons as the "line partially overlap" test above, where `b`'s
+    # edge is only a sub-segment of one of `a`'s edges rather than its exact
+    # reverse, so with `exact: true` they should be left alone.
+    a = [{0, 0}, {4, 0}, {4, 2}, {0, 2}]
+    b = [{1, 2}, {2, 2}, {2, 3}, {1, 3}]
+    expected = [a, b]
+    assert Geo.merge_polygons([a, b], exact: true) == expected
+  end
+
   # Merge doesn't guarantee which vertex a merged polygon starts at, so
   # rotate it back to a known starting vertex before comparing.
   defp rotate_to(polygon, start) do

@@ -182,20 +182,32 @@ defmodule Scurry.Geo do
   `line_segment_intersection/2` to check for overlap. If the overlap is
   `:on_segment` (meaning the two vertices entirely or partially are on top of each other,
   the two vertices are merged to join the polygons.
+
+  ## Options
+
+  * `:exact` (default `false`) when `true`, only cancel edges that are exact
+  matches - ie. an edge in one polygon whose two vertices are precisely the
+  reverse of an edge in the other. Partial or extending overlaps (where an
+  edge is a sub-segment, or extends past, another) are left alone. This is
+  a cheaper check and useful when you know your polygons were built to
+  share vertices exactly and don't want incidental collinear overlaps
+  (eg. two edges that merely touch or run alongside each other) to merge.
   """
 
-  @spec merge_polygons([polygon()]) :: [polygon()]
-  def merge_polygons(polygons) do
+  @spec merge_polygons([polygon()], exact: boolean()) :: [polygon()]
+  def merge_polygons(polygons, opts \\ []) do
+    exact = Keyword.get(opts, :exact, false)
+
     # Recursive merge until there's no longer any changes.
-    case merge_polygons_once(polygons) do
-      {:merged, polygons} -> merge_polygons(polygons)
+    case merge_polygons_once(polygons, exact) do
+      {:merged, polygons} -> merge_polygons(polygons, opts)
       :unchanged -> polygons
     end
   end
 
   # Try to merge one pair of polygons in the list. Returns `{:merged, list}`
   # with the merged pair spliced in, or `:unchanged` if no pair overlaps.
-  defp merge_polygons_once(polygons) do
+  defp merge_polygons_once(polygons, exact) do
     count = length(polygons)
 
     Enum.find_value(0..(count - 1)//1, :unchanged, fn i ->
@@ -203,7 +215,7 @@ defmodule Scurry.Geo do
         a = Enum.at(polygons, i)
         b = Enum.at(polygons, j)
 
-        case merge_polygon_pair(a, b) do
+        case merge_polygon_pair(a, b, exact) do
           {:merged, merged} ->
             rest =
               polygons
@@ -222,11 +234,11 @@ defmodule Scurry.Geo do
   # Merge two polygons that share (part of) an edge. `:on_segment` edge pairs
   # are found, the shared portions are cancelled out of both polygons and the
   # remaining edges are walked to reconstruct the combined boundary.
-  defp merge_polygon_pair(a, b) do
+  defp merge_polygon_pair(a, b, exact) do
     edges_a = polygon_edges(a)
     edges_b = polygon_edges(b)
 
-    overlaps = find_edge_overlaps(edges_a, edges_b)
+    overlaps = find_edge_overlaps(edges_a, edges_b, exact)
 
     case overlaps do
       [] ->
@@ -256,11 +268,28 @@ defmodule Scurry.Geo do
   end
 
   # Compare every edge of `edges_a` against every edge of `edges_b` and
-  # collect the ones that genuinely overlap (not just touch at a point).
-  # A polygon pair can share more than one edge (eg. one polygon filling a
-  # notch in another), so this returns *all* overlapping pairs found, not
-  # just the first.
-  defp find_edge_overlaps(edges_a, edges_b) do
+  # collect the ones that overlap, in `{ea, eb, range}` triples where
+  # `range` is the two points bounding the overlapping portion (consumed by
+  # `split_edge/2` below). A polygon pair can share more than one edge (eg.
+  # one polygon filling a notch in another), so this returns *all*
+  # overlapping pairs found, not just the first.
+  #
+  # In `exact` mode, an edge only overlaps another that's precisely its
+  # reverse - the whole edge is always the "range", since there's nothing
+  # partial to bound.
+  defp find_edge_overlaps(edges_a, edges_b, true = _exact) do
+    for ea <- edges_a,
+        eb <- edges_b,
+        eb == reverse_edge(ea) do
+      {ea, eb, ea}
+    end
+  end
+
+  # In non-`exact` mode, edges overlap whenever they're collinear
+  # (`:on_segment`) and their ranges genuinely intersect - they need not be
+  # exact reverses of each other, just partly or fully on top of one
+  # another.
+  defp find_edge_overlaps(edges_a, edges_b, false = _exact) do
     for ea <- edges_a,
         eb <- edges_b,
         line_segment_intersection(ea, eb) == :on_segment,
@@ -269,6 +298,8 @@ defmodule Scurry.Geo do
       {ea, eb, range}
     end
   end
+
+  defp reverse_edge({p1, p2}), do: {p2, p1}
 
   # Given two collinear, overlapping edges, find the two points that bound
   # the overlapping portion. These are always among the edges' own vertices,
