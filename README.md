@@ -298,12 +298,18 @@ this from `g_cost.`
 To make a new release.
 
 Preconditions
-* build test etc
-* Logged into hex via `mix hex...`, check using `mix hex.user whoami`
+* Run `mix.test` (also enforced via github rules)
+* Logged into hex via `mix hex.auth` (check using `mix hex.user whoami`)
 
 Steps
-1. Increase version in `mix.exs`
+1. Create a new branch (`git checkout -b new-release`)
+1. Increase version in `mix.exs` (using semver guidance)
+1. Sanity `mix test`
+1. Push branch and merge via github
+1. `git checkout main && git pull` after merge
 1. `mix hex.publish`
+1. `git tag vX.Y.Z && git push origin vX.Y.Z``
+`
 
 ## Todo
 
