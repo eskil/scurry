@@ -172,29 +172,80 @@ defmodule Scurry.Geo do
   end
 
   @doc """
-  Merge polygons.
+  Merge polygons that share edges into larger polygons.
 
-  Iterate over all vertices of the given polygons and merge where vertices
-  are `:on_segment` with each other. This allows you to manage your polygons as sharing
-  vectors and combine into larger polygons.
+  Iterates over all the edges of the given polygons and merges polygons where
+  their edges are `:on_segment` with each other. This allows you to manage your
+  polygons as sharing vertices and combine them into larger polygons.
 
-  This iterates over all the polygons and their vertices and uses
-  `line_segment_intersection/2` to check for overlap. If the overlap is
-  `:on_segment` (meaning the two vertices entirely or partially are on top of each other,
-  the two vertices are merged to join the polygons.
+  This uses `line_segment_intersection/2` to check each pair of edges for
+  overlap. If the overlap is `:on_segment` (meaning the two edges entirely or
+  partially are on top of each other), the shared portions are cancelled out
+  and the remaining edges are joined into a single polygon. This repeats until
+  no more polygons can be merged.
+
+  ## Params
+
+  * `polygons` (list of `t:polygon/0`) the polygons to merge.
+  * `opts` (`t:keyword/0`) options, see below.
 
   ## Options
 
   * `:exact` (default `false`) when `true`, only cancel edges that are exact
-  matches - ie. an edge in one polygon whose two vertices are precisely the
-  reverse of an edge in the other. Partial or extending overlaps (where an
-  edge is a sub-segment, or extends past, another) are left alone. This is
-  a cheaper check and useful when you know your polygons were built to
-  share vertices exactly and don't want incidental collinear overlaps
-  (eg. two edges that merely touch or run alongside each other) to merge.
-  """
+    matches - ie. an edge in one polygon whose two vertices are precisely the
+    reverse of an edge in the other. Partial or extending overlaps (where an
+    edge is a sub-segment of, or extends past, another) are left alone. This
+    is a cheaper check and useful when you know your polygons were built to
+    share vertices exactly and don't want incidental collinear overlaps to
+    merge.
 
-  @spec merge_polygons([polygon()], exact: boolean()) :: [polygon()]
+  ## Returns
+
+  A list of `t:polygon/0`.
+
+  * Polygons that share edges are merged into one polygon, with the shared
+    edges removed and any vertices left on a straight line dropped.
+  * Polygons that don't share any edge with another polygon are returned
+    unchanged.
+  * A merged polygon may start at a different vertex than any of its input
+    polygons.
+
+  ## Note
+
+  All polygons must have the same winding order (clockwise). Two adjacent
+  polygons traverse a shared edge in opposite directions, and merging relies on
+  this to join the remaining edges up. Polygons that overlap in area, ie.
+  where edges cross each other rather than run along each other, are _not_
+  merged.
+
+  ## Examples
+      # Two boxes stacked on top of each other, sharing a full edge
+      iex> a = [{0, 0}, {2, 0}, {2, 2}, {0, 2}]
+      [{0, 0}, {2, 0}, {2, 2}, {0, 2}]
+      iex> b = [{0, 2}, {2, 2}, {2, 3}, {0, 3}]
+      [{0, 2}, {2, 2}, {2, 3}, {0, 3}]
+      iex> Geo.merge_polygons([a, b])
+      [[{0, 0}, {2, 0}, {2, 3}, {0, 3}]]
+
+      # Boxes that don't share an edge are left alone
+      iex> a = [{0, 0}, {2, 0}, {2, 2}, {0, 2}]
+      [{0, 0}, {2, 0}, {2, 2}, {0, 2}]
+      iex> c = [{0, 3}, {2, 3}, {2, 4}, {0, 4}]
+      [{0, 3}, {2, 3}, {2, 4}, {0, 4}]
+      iex> Geo.merge_polygons([a, c])
+      [[{0, 0}, {2, 0}, {2, 2}, {0, 2}], [{0, 3}, {2, 3}, {2, 4}, {0, 4}]]
+
+      # A partial overlap merges by default, but not with `exact: true`
+      iex> a = [{0, 0}, {4, 0}, {4, 2}, {0, 2}]
+      [{0, 0}, {4, 0}, {4, 2}, {0, 2}]
+      iex> d = [{1, 2}, {2, 2}, {2, 3}, {1, 3}]
+      [{1, 2}, {2, 2}, {2, 3}, {1, 3}]
+      iex> Geo.merge_polygons([a, d])
+      [[{0, 0}, {4, 0}, {4, 2}, {2, 2}, {2, 3}, {1, 3}, {1, 2}, {0, 2}]]
+      iex> Geo.merge_polygons([a, d], exact: true)
+      [[{0, 0}, {4, 0}, {4, 2}, {0, 2}], [{1, 2}, {2, 2}, {2, 3}, {1, 3}]]
+  """
+  @spec merge_polygons([polygon()], [exact: boolean()]) :: [polygon()]
   def merge_polygons(polygons, opts \\ []) do
     exact = Keyword.get(opts, :exact, false)
 
