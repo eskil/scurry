@@ -176,8 +176,22 @@ defmodule Scurry.AstarTest do
   def heur_dead_end(_from, _to), do: 0
 
   test "a-star unreachable stop" do
+    # "z" isn't in the graph at all, so search/4 never visits it. path/1 used
+    # to mistake that for "z" being the start (shortest_path_tree[stop]
+    # defaults to nil either way) and silently return the bogus one-node
+    # path ["z"]. It should instead report that stop was never reached.
     state = Astar.search(graph_dead_end(), "a", "z", &heur_dead_end/2)
     path = Astar.path(state)
-    assert path == ["z"]
+    assert path == nil
+  end
+
+  test "a-star unreachable stop that's in the graph but has no edges" do
+    # Unlike graph_dead_end/0 above, "z" is present in the graph here (eg.
+    # as PolygonMap.extend_graph/6 would add it), just with no edges in
+    # either direction, so it can never be added to the frontier.
+    graph = Map.put(graph_dead_end(), "z", [])
+    state = Astar.search(graph, "a", "z", &heur_dead_end/2)
+    path = Astar.path(state)
+    assert path == nil
   end
 end
