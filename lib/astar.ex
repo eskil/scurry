@@ -173,16 +173,23 @@ defmodule Scurry.Astar do
 
   ## Returns
 
-  The path as a list of nodes. The type of the node is the same as in the
-  `t:graph/0` used in the call to `search/4`.
+  * The path as a list of nodes, if `stop` was reached by `search/4`. The
+    type of the node is the same as in the `t:graph/0` used in the call to
+    `search/4`.
+  * `nil` if `stop` was never reached, eg. because it's unreachable from
+    `start`, or has no edges connecting it to the rest of `graph` at all.
 
   """
-  @spec path(state()) :: list(gnode())
+  @spec path(state()) :: list(gnode()) | nil
   def path(state) do
-    next = state.shortest_path_tree[state.stop]
+    if Map.has_key?(state.shortest_path_tree, state.stop) do
+      next = state.shortest_path_tree[state.stop]
 
-    path(state, state.start, next, [state.stop])
-    |> Enum.reverse()
+      path(state, state.start, next, [state.stop])
+      |> Enum.reverse()
+    else
+      nil
+    end
   end
 
   defp path(_state, _start, nil, acc) do
