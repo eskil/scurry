@@ -1,7 +1,11 @@
 defmodule Scurr.PolygonMapTest do
   use ExUnit.Case, async: true
 
+  alias Scurry.Astar
+  alias Scurry.Geo
+  alias Scurry.Polygon
   alias Scurry.PolygonMap
+  alias Scurry.Vector
   doctest PolygonMap
 
   ##
@@ -367,5 +371,60 @@ defmodule Scurr.PolygonMapTest do
     assert Enum.sort(Map.keys(graph)) == Enum.sort(vertices)
     edges_10_10 = graph[{10, 10}]
     assert [{{5, 7}, 32}, {{7, 5}, 32}, {{7, 7}, 34}, {{20, 20}, 60}] = Enum.sort(edges_10_10)
+  end
+
+  ###
+  ### Integration: nearest_point must round a boundary point onto a point
+  ### that's actually inside the world, not just whichever rounding happens
+  ### to be nearest - a stray outside-by-a-pixel point has no line-of-sight
+  ### to anything, which used to surface as a bogus unreachable stop instead
+  ### of the real path. See `PolygonMap.nearest_boundary_point_entering_world/2`.
+  ###
+
+  test "nearest_point rounds a stop onto a point inside the world, with real edges" do
+    # Two walkboxes that merge (sharing the {532, 146}-{554, 150} edge) into a
+    # single concave region with a narrow peninsula.
+    parkinglot = [
+      {91, 127},
+      {173, 127},
+      {186, 136},
+      {329, 136},
+      {331, 131},
+      {412, 131},
+      {483, 131},
+      {497, 128},
+      {587, 130},
+      {547, 140},
+      {532, 146},
+      {554, 150},
+      {819, 200},
+      {808, 211},
+      {3, 205},
+      {8, 154},
+      {25, 150},
+      {19, 136}
+    ]
+
+    path_start = [{730, 126}, {732, 131}, {554, 150}, {532, 146}]
+
+    assert [region] = Geo.merge_polygons([parkinglot, path_start])
+
+    vertices = PolygonMap.get_vertices(region, [])
+    graph = PolygonMap.create_graph(region, [], vertices)
+    start = PolygonMap.nearest_point(region, [], {735, 192})
+    stop = PolygonMap.nearest_point(region, [], {700, 73})
+
+    # `nearest_point_on_edge/2`'s exact result here rounds to a few
+    # candidate integer points; picking the wrong one (the bug this test
+    # guards against) lands one pixel outside `region`, with no
+    # line-of-sight to anything. The right one is inside it, with real
+    # edges and a real path.
+    assert Polygon.is_inside?(region, stop)
+
+    {graph, _vertices} = PolygonMap.extend_graph(graph, region, [], vertices, [start, stop])
+    assert graph[stop] != []
+
+    state = Astar.search(graph, start, stop, &Vector.distance/2)
+    assert Astar.path(state) != nil
   end
 end

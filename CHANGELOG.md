@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Fix `Astar.path/1` to return `nil` when `stop` was never reached by `search/4`, instead of silently returning a bogus one-node path `[stop]`.
-
+- Fix `PolygonMap.nearest_point/3` to round a boundary snap onto a point that's actually inside the world, instead of sometimes landing one pixel outside it. 
 
 ## 3.1.0 - 2026-09-23
 

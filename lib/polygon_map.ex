@@ -197,7 +197,7 @@ defmodule Scurry.PolygonMap do
   end
 
   defp nearest_point_helper(points, _holes, point, false) do
-    nearest_boundary_point_helper(points, point)
+    nearest_boundary_point_entering_world(points, point)
   end
 
   defp nearest_point_in_holes([], point) do
@@ -217,55 +217,56 @@ defmodule Scurry.PolygonMap do
   end
 
   defp nearest_point_in_holes_helper([hole | _holes], point, true) do
-    nearest_boundary_point_helper(hole, point)
+    nearest_boundary_point_escaping_hole(hole, point)
   end
 
-  defp nearest_boundary_point_helper(world, point) do
-    {x, y} = Polygon.nearest_point_on_edge(world, point)
+  # `point` is outside `world`; round `nearest_point_on_edge/2`'s result to
+  # whichever candidate lands *inside* `world` (on the border counts), so the
+  # returned point is actually walkable and not just outside-by-a-pixel.
+  defp nearest_boundary_point_entering_world(world, point) do
+    nearest_boundary_point(world, point, &Polygon.is_inside?(world, &1))
+  end
 
-    # This is a problematic area - we want to round towards the start of the
-    # line Eg. in complex.json scene, clicking {62, 310} yields {64.4, 308.8},
-    # which naive rounding makes {64, 309}. This however places us *back*
-    # *inside* the hole.
+  # `point` is inside `hole`; round `nearest_point_on_edge/2`'s result to
+  # whichever candidate lands *outside* `hole` (not on the border - that's
+  # still inside the hole's own edge), so the returned point is back in
+  # walkable space.
+  defp nearest_boundary_point_escaping_hole(hole, point) do
+    nearest_boundary_point(hole, point, &Polygon.is_outside?(hole, &1, allow_border: false))
+  end
 
-    # Some options are; try all four combos or floor/ceil and see which yields
-    # the minimal distance - wrong, since the start might be on the far side of
-    # a hole.
+  # Shared rounding logic for the two helpers above. Both need to turn a
+  # float point on `polygon`'s edge into an integer one that's actually on
+  # the correct side of `polygon` - naive rounding can land on the wrong
+  # side. Eg. in complex.json scene, clicking {62, 310} yields {64.4,
+  # 308.8}, which naive rounding makes {64, 309}; if that's meant to escape
+  # a hole, it lands *back inside* it.
+  #
+  # Some alternatives considered: shortening towards `point` (same problem,
+  # just mirrored), or running A-star on all four roundings and picking the
+  # shortest path (correct, but needlessly CPU-heavy for a rounding
+  # tie-break).
+  #
+  # Instead, try the naive rounding and all four ceil/floor combinations,
+  # and use the first one `valid?` accepts - what "valid" means (inside the
+  # world vs. outside the hole) is up to the caller, since the two cases
+  # need opposite answers from the same boundary check.
+  defp nearest_boundary_point(polygon, point, valid?) do
+    {x, y} = Polygon.nearest_point_on_edge(polygon, point)
 
-    # Shorten towards start? Same thing.
+    candidates = [
+      {round(x), round(y)},
+      {ceil(x), ceil(y)},
+      {ceil(x), floor(y)},
+      {floor(x), ceil(y)},
+      {floor(x), floor(y)}
+    ]
 
-    # Actually run A-star to compute all four rounding and pick the shortest
-    # path - that's a bit cpu heavy.
-
-    # Compute all four rounding options and pick one that's *not* inside the
-    # hole, and don't allow it to be on the border.
-
-    p = {round(x), round(y)}
-    a = {ceil(x), ceil(y)}
-    b = {ceil(x), floor(y)}
-    c = {floor(x), ceil(y)}
-    d = {floor(x), floor(y)}
-
-    cond do
-      Polygon.is_outside?(world, p, allow_border: false) ->
-        p
-
-      Polygon.is_outside?(world, a, allow_border: false) ->
-        a
-
-      Polygon.is_outside?(world, b, allow_border: false) ->
-        b
-
-      Polygon.is_outside?(world, c, allow_border: false) ->
-        c
-
-      Polygon.is_outside?(world, d, allow_border: false) ->
-        d
-    end
-
-    # If none of the points are outside, we'll pleasantly crash and we should
-    # improve this to continuously move outwards a reasonable amount until
-    # we're outside.
+    # If none of the candidates are valid, we'll loudly crash here - we
+    # should improve this to keep moving outwards a reasonable amount until
+    # one is.
+    Enum.find(candidates, valid?) ||
+      raise "no rounding of #{inspect({x, y})} satisfies the boundary check against #{inspect(polygon)}"
   end
 
   @doc """
